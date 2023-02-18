@@ -16,6 +16,7 @@ import ru.heatrk.antivirus.presentation.root.RootScreen
 import ru.heatrk.antivirus.presentation.values.dimens.ElementsDimens
 import ru.heatrk.antivirus.presentation.values.strings.strings
 import ru.heatrk.antivirus.presentation.values.styles.ApplicationTheme
+import ru.heatrk.antivirus.utils.app_unique.AppUniqueUtil
 
 @Composable
 fun App(rootComponent: RootComponent)  {
@@ -25,6 +26,10 @@ fun App(rootComponent: RootComponent)  {
 }
 
 fun main() {
+    if (AppUniqueUtil.isAlreadyRunning("ru.heatrk.antivirus")) {
+        return
+    }
+
     application {
         withDI(*modules) {
             val rootComponent: RootComponent by rememberInstance(ROOT_COMPONENT)
