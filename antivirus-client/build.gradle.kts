@@ -34,6 +34,8 @@ kotlin {
                 implementation(Dependencies.exposedJdbc)
                 implementation(Dependencies.immutableCollections)
                 implementation(Dependencies.coroutinesSwing)
+                implementation(files(Dependencies.Files.jnaCore))
+                implementation(files(Dependencies.Files.jnaPlatform))
             }
         }
         val jvmTest by getting
