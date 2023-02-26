@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 #include <cstddef>
+#include <functional>
+
 #include "utils.h"
 
 using namespace std;
@@ -9,12 +11,13 @@ using namespace std;
 namespace Antivirus {
     class Channel {
     private:
-        HANDLE pipe;
+        HANDLE inputPipe;
+        HANDLE outputPipe;
         HANDLE pipeThread;
     public:
         Channel();
-        void connect(void (*func)(Channel*, byte*));
-        void write(byte* bytes);
+        void connect(std::function<void(MessageStruct)> onMessage);
+        void write(MessageStruct message);
         void disconnect();
     };
 }

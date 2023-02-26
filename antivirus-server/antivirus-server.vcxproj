@@ -182,13 +182,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="antivirus-server.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="channel.cpp" />
     <ClCompile Include="scanner.cpp" />
+    <ClCompile Include="Service.cpp" />
+    <ClCompile Include="StatusNotifier.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="channel.h" />
+    <ClInclude Include="IncomingMessageTypes.h" />
+    <ClInclude Include="OutgoingMessageBodyErrorStruct.h" />
+    <ClInclude Include="OutgoingMessageTypes.h" />
+    <ClInclude Include="MessagingParticipant.h" />
     <ClInclude Include="scanner.h" />
+    <ClInclude Include="OutgoingMessageBodyStatusStruct.h" />
+    <ClInclude Include="Service.h" />
+    <ClInclude Include="StatusNotifier.h" />
+    <ClInclude Include="MessageStruct.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

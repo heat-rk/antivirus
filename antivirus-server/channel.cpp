@@ -1,70 +1,111 @@
-#include <stdio.h>
 #include "channel.h"
+#include "utils.h"
 
 using namespace std;
 using namespace Antivirus;
 
-#define PIPE_PATH "\\\\.\\pipe\\antivirus-pipe"
-#define PIPE_BUFFSIZE 1024
+#define PIPE_SERVICE_INPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-input"
+#define PIPE_SERVICE_OUTPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-output"
+#define PIPE_BUFFSIZE 512
+
+void printBytes(int8_t* bytes, int length) {
+    for (int i = 0; i < length; i++) {
+        printf("%d ", bytes[i]);
+    }
+
+    printf("\n");
+}
 
 struct PipeThreadArgument {
-    Channel* channel;
-    HANDLE pipe;
-    void (*func)(Channel*, byte*);
+    HANDLE inputPipe;
+    HANDLE outputPipe;
+    std::function<void(MessageStruct)> onMessage;
 };
 
 DWORD WINAPI pipeThreadHandler(LPVOID lpvParam) {
     PipeThreadArgument* arg = (PipeThreadArgument*) lpvParam;
 
-    while (arg->pipe != INVALID_HANDLE_VALUE) {
+    while (arg->inputPipe != INVALID_HANDLE_VALUE && arg->outputPipe != INVALID_HANDLE_VALUE) {
         printf("Waiting for client...\n");
 
-        if (ConnectNamedPipe(arg->pipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-            printf("Client connected.\n");
-
-            byte buffer[PIPE_BUFFSIZE];
-
-            while (ReadFile(arg->pipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
-                arg->func(arg->channel, buffer);
+        if (ConnectNamedPipe(arg->inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
+            if (ConnectNamedPipe(arg->outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
+                printf("[OUTPUT] Client connected.\n");
+            } else {
+                printf("[OUTPUT] Client connection failed, GLE=%d.\n", GetLastError());
             }
 
-            DisconnectNamedPipe(arg->pipe);
+            printf("[INPUT] Client connected.\n");
 
-            printf("Client disconnected.\n");
+            int8_t buffer[PIPE_BUFFSIZE];
+
+            while (ReadFile(arg->inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
+                printf("[INPUT] Message received.\n[INPUT] Body -------------------------\n");
+                printf("[INPUT] Size of message in bytes: %d\n", sizeof(buffer));
+                printBytes(buffer, sizeof(buffer));
+                printf("[INPUT] Body end ---------------------\n");
+                arg->onMessage(*(MessageStruct*) buffer);
+            }
+
+            DisconnectNamedPipe(arg->inputPipe);
+            DisconnectNamedPipe(arg->outputPipe);
+
+            printf("[INPUT] Client disconnected.\n");
+            printf("[OUTPUT] Client disconnected.\n");
         } else {
-            printf("Client connection failed, GLE=%d.\n", GetLastError());
+            printf("[INPUT] Client connection failed, GLE=%d.\n", GetLastError());
         }
-
-        Sleep(1000);
     }
 
-    free(arg);
+    delete arg;
 
     return 1;
 }
 
 Channel::Channel() {
-    pipe = INVALID_HANDLE_VALUE;
+    inputPipe = INVALID_HANDLE_VALUE;
+    outputPipe = INVALID_HANDLE_VALUE;
     pipeThread = INVALID_HANDLE_VALUE;
 }
 
-void Channel::connect(void (*func)(Channel*, byte*)) {
-    pipe = CreateNamedPipe(
-        TEXT(PIPE_PATH),
-        PIPE_ACCESS_DUPLEX,
-        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-        PIPE_UNLIMITED_INSTANCES,
-        PIPE_BUFFSIZE,
+void Channel::connect(std::function<void(MessageStruct)> onMessage) {
+    inputPipe = CreateNamedPipe(
+        TEXT(PIPE_SERVICE_INPUT_PATH),
+        PIPE_ACCESS_INBOUND,
+        PIPE_READMODE_BYTE | PIPE_WAIT,
+        1,
+        0,
         PIPE_BUFFSIZE,
         NMPWAIT_USE_DEFAULT_WAIT,
         NULL
     );
 
-    struct PipeThreadArgument* arg = (PipeThreadArgument*) malloc(sizeof(struct PipeThreadArgument));
+    outputPipe = CreateNamedPipe(
+        TEXT(PIPE_SERVICE_OUTPUT_PATH),
+        PIPE_ACCESS_OUTBOUND,
+        PIPE_TYPE_BYTE | PIPE_WAIT,
+        1,
+        PIPE_BUFFSIZE,
+        0,
+        NMPWAIT_USE_DEFAULT_WAIT,
+        NULL
+    );
 
-    arg->channel = this;
-    arg->func = func;
-    arg->pipe = pipe;
+    if (inputPipe == INVALID_HANDLE_VALUE) {
+        printf("Input pipe creation failed, GLE=%d.\n", GetLastError());
+        return;
+    }
+
+    if (outputPipe == INVALID_HANDLE_VALUE) {
+        printf("Output pipe creation failed, GLE=%d.\n", GetLastError());
+        return;
+    }
+
+    PipeThreadArgument* arg = new PipeThreadArgument;
+
+    arg->onMessage = onMessage;
+    arg->inputPipe = inputPipe;
+    arg->outputPipe = outputPipe;
 
     if (!arg) {
         return;
@@ -77,15 +118,25 @@ void Channel::connect(void (*func)(Channel*, byte*)) {
     }
 }
 
-void Channel::write(byte* bytes) {
+void Channel::write(MessageStruct message) {
     printf("Writing...\n");
 
-    if (pipe == INVALID_HANDLE_VALUE) {
+    printf("Body -------------------------\n");
+
+    int8_t* bytes = reinterpret_cast<int8_t*>(&message);
+
+    printf("Size of message in bytes: %d\n", sizeof(message));
+
+    printBytes(reinterpret_cast<int8_t*>(&message), sizeof(message));
+
+    printf("Body end ---------------------\n");
+
+    if (outputPipe == INVALID_HANDLE_VALUE) {
         printf("Write failed because of pipe INVALID_HANDLE_VALUE.\n");
         return;
     }
 
-    if (WriteFile(pipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
+    if (WriteFile(outputPipe, &message, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
         printf("Write failed, GLE=%d.\n", GetLastError());
         return;
     }
@@ -94,6 +145,7 @@ void Channel::write(byte* bytes) {
 }
 
 void Channel::disconnect() {
-    CloseHandle(pipe);
+    CloseHandle(inputPipe);
+    CloseHandle(outputPipe);
     CloseHandle(pipeThread);
 }

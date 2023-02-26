@@ -5,8 +5,6 @@ val modules = arrayOf(
     componentsModule,
     utilsModule,
     repositoriesModule,
-    useCasesModule,
     dispatchersModule,
-    mappersModule,
     apiModule
 )
