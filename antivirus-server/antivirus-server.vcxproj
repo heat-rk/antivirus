@@ -185,7 +185,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="channel.cpp" />
     <ClCompile Include="scanner.cpp" />
-    <ClCompile Include="Service.cpp" />
     <ClCompile Include="StatusNotifier.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
@@ -197,7 +196,6 @@
     <ClInclude Include="MessagingParticipant.h" />
     <ClInclude Include="scanner.h" />
     <ClInclude Include="OutgoingMessageBodyStatusStruct.h" />
-    <ClInclude Include="Service.h" />
     <ClInclude Include="StatusNotifier.h" />
     <ClInclude Include="MessageStruct.h" />
     <ClInclude Include="utils.h" />

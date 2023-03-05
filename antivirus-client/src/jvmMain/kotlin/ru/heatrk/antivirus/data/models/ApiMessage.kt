@@ -1,9 +1,10 @@
 package ru.heatrk.antivirus.data.models
 
-import ru.heatrk.antivirus.data.models.structs.MessageStruct
+sealed interface ApiMessage<Body> {
+    data class Ok<Body>(val body: Body): ApiMessage<Body>
 
-sealed interface ApiMessage {
-    class Ok(val structureWrapper: MessageStruct): ApiMessage
-
-    object Fail: ApiMessage
+    data class Fail<Body>(
+        val description: String,
+        val errorCode: Int? = null
+    ): ApiMessage<Body>
 }

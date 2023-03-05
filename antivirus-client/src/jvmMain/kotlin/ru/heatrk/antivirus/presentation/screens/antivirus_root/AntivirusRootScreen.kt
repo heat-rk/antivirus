@@ -11,7 +11,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import ru.heatrk.antivirus.presentation.dialogs.MessageDialog
+import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControl
+import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlIntent
+import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlViewState
 import ru.heatrk.antivirus.presentation.values.dimens.ElementsDimens
+import ru.heatrk.antivirus.presentation.values.dimens.InsetsDimens
 import ru.heatrk.antivirus.presentation.values.strings.strings
 import ru.heatrk.antivirus.presentation.values.styles.ApplicationTheme
 
@@ -20,12 +25,22 @@ fun AntivirusRootScreen(
     component: AntivirusRootComponent
 ) {
     val antivirusRootViewState by component.state.collectAsState()
-    AntivirusRootScreen(state = antivirusRootViewState)
+    val serviceControlViewState by component.serviceControlComponent.state.collectAsState()
+
+    AntivirusRootScreen(
+        state = antivirusRootViewState,
+        onIntent = component::onIntent,
+        serviceControlViewState = serviceControlViewState,
+        onServiceControlIntent = component.serviceControlComponent::onIntent
+    )
 }
 
 @Composable
 private fun AntivirusRootScreen(
-    state: AntivirusRootViewState
+    state: AntivirusRootViewState,
+    onIntent: (AntivirusRootIntent) -> Unit,
+    serviceControlViewState: ServiceControlViewState,
+    onServiceControlIntent: (ServiceControlIntent) -> Unit
 ) {
     when (state) {
         is AntivirusRootViewState.Loading -> {
@@ -33,11 +48,19 @@ private fun AntivirusRootScreen(
         }
 
         is AntivirusRootViewState.Ok -> {
-            AntivirusRootOkScreen(state)
+            AntivirusRootOkScreen(
+                state = state,
+                onIntent = onIntent,
+                serviceControlViewState = serviceControlViewState,
+                onServiceControlIntent = onServiceControlIntent
+            )
         }
 
-        is AntivirusRootViewState.ServiceUnavailable -> {
-            AntivirusRootServiceUnavailableScreen(state)
+        is AntivirusRootViewState.Error -> {
+            AntivirusRootErrorScreen(
+                state = state,
+                onIntent = onIntent
+            )
         }
     }
 }
@@ -56,14 +79,36 @@ private fun AntivirusRootLoadingScreen(
 
 @Composable
 private fun AntivirusRootOkScreen(
-    state: AntivirusRootViewState.Ok
+    state: AntivirusRootViewState.Ok,
+    onIntent: (AntivirusRootIntent) -> Unit,
+    serviceControlViewState: ServiceControlViewState,
+    onServiceControlIntent: (ServiceControlIntent) -> Unit
 ) {
+    MessageDialog(
+        dialogState = state.dialogState,
+        onDismiss = { onIntent(AntivirusRootIntent.DialogDismiss) }
+    )
 
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(InsetsDimens.Default)
+    ) {
+        ServiceControl(
+            state = serviceControlViewState,
+            onIntent = onServiceControlIntent,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+        )
+    }
 }
 
 @Composable
-private fun AntivirusRootServiceUnavailableScreen(
-    state: AntivirusRootViewState.ServiceUnavailable
+private fun AntivirusRootErrorScreen(
+    state: AntivirusRootViewState.Error,
+    onIntent: (AntivirusRootIntent) -> Unit,
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -73,8 +118,8 @@ private fun AntivirusRootServiceUnavailableScreen(
             shape = ApplicationTheme.shapes.medium,
             modifier = Modifier
                 .size(
-                    width = ElementsDimens.ServiceUnavailableWindowWidth,
-                    height = ElementsDimens.ServiceUnavailableWindowHeight
+                    width = ElementsDimens.ErrorWindowWidth,
+                    height = ElementsDimens.ErrorWindowHeight
                 )
         ) {
             Column(
@@ -83,17 +128,17 @@ private fun AntivirusRootServiceUnavailableScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(
-                    text = strings.serviceUnavailableTitle,
+                    text = strings.error,
                     style = ApplicationTheme.typography.h3
                 )
 
                 Text(
-                    text = strings.serviceUnavailableMessage,
+                    text = state.message,
                     style = ApplicationTheme.typography.subtitle1
                 )
 
                 Button(
-                    onClick = { /* TODO() */ }
+                    onClick = { onIntent(AntivirusRootIntent.Reload) }
                 ) {
                     Text(
                         text = strings.reload,
@@ -109,6 +154,13 @@ private fun AntivirusRootServiceUnavailableScreen(
 @Preview
 private fun AntivirusRootScreenPreview() {
     ApplicationTheme {
-        AntivirusRootScreen(state = AntivirusRootViewState.Ok)
+        AntivirusRootScreen(
+            state = AntivirusRootViewState.Ok(),
+            onIntent = {},
+            serviceControlViewState = ServiceControlViewState.Ok(
+                isServiceEnabled = true
+            ),
+            onServiceControlIntent = {}
+        )
     }
 }

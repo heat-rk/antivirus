@@ -1,17 +1,21 @@
 package ru.heatrk.antivirus.presentation.screens.antivirus_root
 
 import com.arkivanov.decompose.ComponentContext
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import com.arkivanov.decompose.childContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.kodein.di.DI
-import ru.heatrk.antivirus.AppConfig
-import ru.heatrk.antivirus.domain.models.Message
-import ru.heatrk.antivirus.domain.models.MessagingParticipant
-import ru.heatrk.antivirus.domain.models.incoming.IncomingMessageBodyStatus
-import ru.heatrk.antivirus.domain.models.outgoing.OutgoingMessageType
+import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 import ru.heatrk.antivirus.presentation.common.Component
-import ru.heatrk.antivirus.utils.tickerFlow
+import ru.heatrk.antivirus.presentation.dialogs.DialogState
+import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlComponent
+import ru.heatrk.antivirus.presentation.values.strings.strings
 
 class AntivirusRootComponent(
     componentContext: ComponentContext,
@@ -20,67 +24,115 @@ class AntivirusRootComponent(
     di: DI
 ): Component(componentContext) {
 
+    val serviceControlComponent = ServiceControlComponent(
+        componentContext = childContext(key = "serviceControlContext")
+    )
+
     private val _state = MutableStateFlow<AntivirusRootViewState>(AntivirusRootViewState.Loading)
     val state = _state.asStateFlow()
 
-    private var statusResponseWaitingJob: Job? = null
+    private val listenersJobs = mutableListOf<Job>()
 
     init {
-        messagingRepository.incomingMessages
-            .filter(::isMessageRequiresHandling)
-            .onEach(::handleMessage)
-            .launchIn(componentScope)
+        load()
+    }
 
-        tickerFlow(
-            period = AppConfig.STATUS_MESSAGE_TIME_CHECK_DELAY,
-            initialDelay = 0L
-        )
-            .flowOn(defaultDispatcher)
-            .filter { statusResponseWaitingJob == null }
-            .onEach {
-                waitForAnswer()
+    fun onIntent(intent: AntivirusRootIntent) = componentScope.launch {
+        when (intent) {
+            AntivirusRootIntent.DialogDismiss -> {
+                val state = _state.value
 
-                println("send")
+                if (state !is AntivirusRootViewState.Ok) {
+                    return@launch
+                }
 
-                messagingRepository.sendMessage(
-                    Message.createOutgoingMessage(
-                        source = MessagingParticipant.CLIENT_STATUS_RECEIVER,
-                        target = MessagingParticipant.SERVER_STATUS_NOTIFIER,
-                        type = OutgoingMessageType.STATUS_REQUEST
+                _state.value = state.copy(dialogState = DialogState.Gone)
+            }
+
+            AntivirusRootIntent.Reload -> {
+                load()
+            }
+        }
+    }
+
+    private fun load() = componentScope.launch {
+        _state.value = AntivirusRootViewState.Loading
+
+        when (val result = messagingRepository.isServiceEnabled()) {
+            is ApiMessage.Ok -> {
+                _state.value = AntivirusRootViewState.Ok()
+                serviceControlComponent.onStatusReceived(result.body)
+                initListeners()
+            }
+
+            is ApiMessage.Fail -> {
+                _state.value = AntivirusRootViewState.Error(
+                    strings.errorMessage(
+                        description = result.description,
+                        errorCode = result.errorCode
                     )
                 )
             }
-            .launchIn(componentScope)
+        }
     }
 
-    private fun handleMessage(message: Message) {
-        when (message.body) {
-            is IncomingMessageBodyStatus -> {
-                cancelWaitForAnswer()
+    private fun initListeners() {
+        listenersJobs.forEach(Job::cancel)
+        listenersJobs.clear()
 
-                _state.value = if (message.body.status == IncomingMessageBodyStatus.Status.OK) {
-                    AntivirusRootViewState.Ok
-                } else {
-                    AntivirusRootViewState.ServiceUnavailable
+        serviceControlComponent.serviceStartEvents
+            .onEach {
+                serviceControlComponent.onStatusLoading()
+
+                when (val result = messagingRepository.startService()) {
+                    is ApiMessage.Ok -> {
+                        serviceControlComponent.onStatusReceived(true)
+                    }
+
+                    is ApiMessage.Fail -> {
+                        serviceControlComponent.onStatusReceived(false)
+
+                        _state.value = AntivirusRootViewState.Ok(
+                            dialogState = DialogState.Error(
+                                title = strings.error,
+                                message = strings.errorMessage(
+                                    description = result.description,
+                                    errorCode = result.errorCode
+                                )
+                            )
+                        )
+                    }
                 }
             }
-        }
-    }
+            .launchIn(componentScope)
+            .also { listenersJobs.add(it) }
 
-    private fun isMessageRequiresHandling(message: Message) =
-        message.target ==  MessagingParticipant.CLIENT_STATUS_RECEIVER
+        serviceControlComponent.serviceStopEvents
+            .onEach {
+                serviceControlComponent.onStatusLoading()
 
-    private fun waitForAnswer() {
-        statusResponseWaitingJob = componentScope.launch(defaultDispatcher) {
-            delay(AppConfig.STATUS_RESPONSE_TIME_LIMIT_MILLIS)
-            _state.value = AntivirusRootViewState.ServiceUnavailable
-            statusResponseWaitingJob = null
-        }
-    }
+                when (val result = messagingRepository.stopService()) {
+                    is ApiMessage.Ok -> {
+                        serviceControlComponent.onStatusReceived(false)
+                    }
 
-    private fun cancelWaitForAnswer() {
-        statusResponseWaitingJob?.cancel()
-        statusResponseWaitingJob = null
+                    is ApiMessage.Fail -> {
+                        serviceControlComponent.onStatusReceived(true)
+
+                        _state.value = AntivirusRootViewState.Ok(
+                            dialogState = DialogState.Error(
+                                title = strings.error,
+                                message = strings.errorMessage(
+                                    description = result.description,
+                                    errorCode = result.errorCode
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+            .launchIn(componentScope)
+            .also { listenersJobs.add(it) }
     }
 
     data class Args(

@@ -16,59 +16,7 @@ void printBytes(int8_t* bytes, int length) {
     printf("\n");
 }
 
-struct PipeThreadArgument {
-    HANDLE inputPipe;
-    HANDLE outputPipe;
-    std::function<void(MessageStruct)> onMessage;
-};
-
-DWORD WINAPI pipeThreadHandler(LPVOID lpvParam) {
-    PipeThreadArgument* arg = (PipeThreadArgument*) lpvParam;
-
-    while (arg->inputPipe != INVALID_HANDLE_VALUE && arg->outputPipe != INVALID_HANDLE_VALUE) {
-        printf("Waiting for client...\n");
-
-        if (ConnectNamedPipe(arg->inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-            if (ConnectNamedPipe(arg->outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-                printf("[OUTPUT] Client connected.\n");
-            } else {
-                printf("[OUTPUT] Client connection failed, GLE=%d.\n", GetLastError());
-            }
-
-            printf("[INPUT] Client connected.\n");
-
-            int8_t buffer[PIPE_BUFFSIZE];
-
-            while (ReadFile(arg->inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
-                printf("[INPUT] Message received.\n[INPUT] Body -------------------------\n");
-                printf("[INPUT] Size of message in bytes: %d\n", sizeof(buffer));
-                printBytes(buffer, sizeof(buffer));
-                printf("[INPUT] Body end ---------------------\n");
-                arg->onMessage(*(MessageStruct*) buffer);
-            }
-
-            DisconnectNamedPipe(arg->inputPipe);
-            DisconnectNamedPipe(arg->outputPipe);
-
-            printf("[INPUT] Client disconnected.\n");
-            printf("[OUTPUT] Client disconnected.\n");
-        } else {
-            printf("[INPUT] Client connection failed, GLE=%d.\n", GetLastError());
-        }
-    }
-
-    delete arg;
-
-    return 1;
-}
-
 Channel::Channel() {
-    inputPipe = INVALID_HANDLE_VALUE;
-    outputPipe = INVALID_HANDLE_VALUE;
-    pipeThread = INVALID_HANDLE_VALUE;
-}
-
-void Channel::connect(std::function<void(MessageStruct)> onMessage) {
     inputPipe = CreateNamedPipe(
         TEXT(PIPE_SERVICE_INPUT_PATH),
         PIPE_ACCESS_INBOUND,
@@ -100,21 +48,39 @@ void Channel::connect(std::function<void(MessageStruct)> onMessage) {
         printf("Output pipe creation failed, GLE=%d.\n", GetLastError());
         return;
     }
+}
 
-    PipeThreadArgument* arg = new PipeThreadArgument;
+void Channel::listen(std::function<void(MessageStruct)> onMessage) {
+    printf("Waiting for client...\n");
 
-    arg->onMessage = onMessage;
-    arg->inputPipe = inputPipe;
-    arg->outputPipe = outputPipe;
+    if (ConnectNamedPipe(inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
+        if (ConnectNamedPipe(outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
+            printf("[OUTPUT] Client connected.\n");
+        }
+        else {
+            printf("[OUTPUT] Client connection failed, GLE=%d.\n", GetLastError());
+        }
 
-    if (!arg) {
-        return;
+        printf("[INPUT] Client connected.\n");
+
+        int8_t buffer[PIPE_BUFFSIZE];
+
+        while (ReadFile(inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
+            printf("[INPUT] Message received.\n[INPUT] Body -------------------------\n");
+            printf("[INPUT] Size of message in bytes: %d\n", sizeof(buffer));
+            printBytes(buffer, sizeof(buffer));
+            printf("[INPUT] Body end ---------------------\n");
+            onMessage(*(MessageStruct*)buffer);
+        }
+
+        DisconnectNamedPipe(inputPipe);
+        DisconnectNamedPipe(outputPipe);
+
+        printf("[INPUT] Client disconnected.\n");
+        printf("[OUTPUT] Client disconnected.\n");
     }
-
-    pipeThread = CreateThread(NULL, 0, pipeThreadHandler, (LPVOID)arg, 0, NULL);
-
-    if (pipeThread == NULL) {
-        printf("Client thread creation failed, GLE=%d.\n", GetLastError());
+    else {
+        printf("[INPUT] Client connection failed, GLE=%d.\n", GetLastError());
     }
 }
 

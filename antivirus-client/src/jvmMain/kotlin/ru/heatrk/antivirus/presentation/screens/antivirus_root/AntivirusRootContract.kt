@@ -1,9 +1,20 @@
 package ru.heatrk.antivirus.presentation.screens.antivirus_root
 
+import ru.heatrk.antivirus.presentation.dialogs.DialogState
+
+sealed interface AntivirusRootIntent {
+    object DialogDismiss : AntivirusRootIntent
+    object Reload : AntivirusRootIntent
+}
+
 sealed interface AntivirusRootViewState {
     object Loading : AntivirusRootViewState
 
-    object ServiceUnavailable : AntivirusRootViewState
+    data class Ok(
+        val dialogState: DialogState = DialogState.Gone
+    ): AntivirusRootViewState
 
-    object Ok: AntivirusRootViewState
+    data class Error(
+        val message: String
+    ): AntivirusRootViewState
 }
