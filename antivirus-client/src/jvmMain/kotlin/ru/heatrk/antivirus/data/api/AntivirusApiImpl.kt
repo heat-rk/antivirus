@@ -284,9 +284,7 @@ class AntivirusApiImpl: AntivirusApi {
             advapi32.CloseServiceHandle(scManager)
             advapi32.CloseServiceHandle(service)
 
-            return ApiMessage.Fail(
-                description = "Already running [Start service]"
-            )
+            return ApiMessage.Ok(Unit)
         }
 
         var startTickCount = kernel32.GetTickCount()
@@ -460,7 +458,7 @@ class AntivirusApiImpl: AntivirusApi {
             advapi32.CloseServiceHandle(scManager)
             advapi32.CloseServiceHandle(service)
 
-            return ApiMessage.Fail(description = "Already stopped [Stop service]")
+            return ApiMessage.Ok(Unit)
         }
 
         while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOP_PENDING) {
