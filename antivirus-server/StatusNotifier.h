@@ -1,7 +1,8 @@
 #pragma once
 
-#include "MessageStruct.h"
 #include <functional>
+
+#include "MessageStruct.h"
 
 namespace Antivirus {
 	class StatusNotifier {

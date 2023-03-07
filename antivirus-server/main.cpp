@@ -1,6 +1,6 @@
 ﻿#include <stdio.h>
 
-#include "channel.h"
+#include "Channel.h"
 #include "StatusNotifier.h"
 #include "MessagingParticipant.h"
 

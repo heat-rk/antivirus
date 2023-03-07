@@ -36,24 +36,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="channel.cpp">
+    <ClCompile Include="Channel.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="StatusNotifier.cpp">
       <Filter>Исходные файлы\api\status_notifier</Filter>
     </ClCompile>
-    <ClCompile Include="scanner.cpp">
+    <ClCompile Include="Scanner.cpp">
       <Filter>Исходные файлы\api\scanner</Filter>
     </ClCompile>
-    <ClCompile Include="utils.cpp">
+    <ClCompile Include="Utils.cpp">
       <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="channel.h">
+    <ClInclude Include="Channel.h">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
     <ClInclude Include="MessageStruct.h">
@@ -65,10 +65,10 @@
     <ClInclude Include="MessagingParticipant.h">
       <Filter>Исходные файлы\api</Filter>
     </ClInclude>
-    <ClInclude Include="utils.h">
+    <ClInclude Include="Utils.h">
       <Filter>Исходные файлы\utils</Filter>
     </ClInclude>
-    <ClInclude Include="scanner.h">
+    <ClInclude Include="Scanner.h">
       <Filter>Исходные файлы\api\scanner</Filter>
     </ClInclude>
     <ClInclude Include="OutgoingMessageBodyErrorStruct.h">

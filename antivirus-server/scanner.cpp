@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "scanner.h"
+#include "Scanner.h"
 
 using namespace Antivirus;
 using namespace std;

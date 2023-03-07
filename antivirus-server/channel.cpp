@@ -1,5 +1,5 @@
-#include "channel.h"
-#include "utils.h"
+#include "Channel.h"
+#include "Utils.h"
 
 using namespace std;
 using namespace Antivirus;

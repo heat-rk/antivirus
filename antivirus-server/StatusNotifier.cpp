@@ -5,7 +5,7 @@
 #include "OutgoingMessageTypes.h"
 #include "OutgoingMessageBodyStatusStruct.h"
 #include "MessagingParticipant.h"
-#include "utils.h"
+#include "Utils.h"
 
 using namespace Antivirus;
 

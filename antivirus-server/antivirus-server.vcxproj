@@ -182,23 +182,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="channel.cpp" />
-    <ClCompile Include="scanner.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Channel.cpp" />
+    <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="StatusNotifier.cpp" />
-    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="channel.h" />
+    <ClInclude Include="Channel.h" />
     <ClInclude Include="IncomingMessageTypes.h" />
     <ClInclude Include="OutgoingMessageBodyErrorStruct.h" />
     <ClInclude Include="OutgoingMessageTypes.h" />
     <ClInclude Include="MessagingParticipant.h" />
-    <ClInclude Include="scanner.h" />
+    <ClInclude Include="Scanner.h" />
     <ClInclude Include="OutgoingMessageBodyStatusStruct.h" />
     <ClInclude Include="StatusNotifier.h" />
     <ClInclude Include="MessageStruct.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
