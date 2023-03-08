@@ -3,6 +3,7 @@
 #include "Channel.h"
 #include "StatusNotifier.h"
 #include "MessagingParticipant.h"
+#include "ServiceManager.h"
 
 using namespace Antivirus;
 
@@ -152,17 +153,31 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
     }
 }
 
-int main() {
-    SERVICE_TABLE_ENTRY ServiceTable[] = {
-        { const_cast<LPTSTR>(SERVICE_NAME), ServiceMain },
-        { NULL, NULL }
-    };
+int wmain(int argc, wchar_t* argv[]) {
+    if (argc - 1 == 0) {
+        SERVICE_TABLE_ENTRY ServiceTable[] = {
+            { const_cast<LPTSTR>(SERVICE_NAME), ServiceMain },
+            { NULL, NULL }
+        };
 
-    if (StartServiceCtrlDispatcher(ServiceTable) == FALSE) {
-        printf("Service constructor failed with code %d.\n", GetLastError());
-        init();
-        HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
-        WaitForSingleObject(hThread, INFINITE);
+        if (StartServiceCtrlDispatcher(ServiceTable) == FALSE) {
+            printf("Service constructor failed with code %d.\n", GetLastError());
+            init();
+            HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
+            WaitForSingleObject(hThread, INFINITE);
+        }
+    } else {
+        ServiceManager sm { reinterpret_cast<char16_t*>(argv[0]) };
+
+        if (wcscmp(argv[argc - 1], L"--install") == 0) {
+            sm.installService();
+        }
+        else if (wcscmp(argv[argc - 1], L"--uninstall") == 0) {
+            sm.uninstallService();
+        }
+        else if (wcscmp(argv[argc - 1], L"--start") == 0) {
+            sm.runService();
+        }
     }
 
     return 0;
