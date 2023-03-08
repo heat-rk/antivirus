@@ -14,4 +14,6 @@ namespace Antivirus {
 		int8_t type,
 		void* body
 	);
+
+	bool cmpstrs(char const* const target, char* current, int length);
 }

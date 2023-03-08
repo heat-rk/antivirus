@@ -29,3 +29,17 @@ MessageStruct Antivirus::generateMessage(
 
 	return message;
 }
+
+bool Antivirus::cmpstrs(char const* const target, char* current, int length) {
+	for (int i = 0; i < length; i++) {
+		if (target[i] == '\0') {
+			break;
+		}
+
+		if (target[i] != current[i]) {
+			return false;
+		}
+	}
+
+	return true;
+}

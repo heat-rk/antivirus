@@ -1,5 +1,7 @@
 ﻿#include <stdio.h>
+#include <Windows.h>
 
+#include "Utils.h"
 #include "Channel.h"
 #include "StatusNotifier.h"
 #include "MessagingParticipant.h"
@@ -16,22 +18,8 @@ HANDLE                  g_ServiceStopEvent = INVALID_HANDLE_VALUE;
 Channel                 channel;
 StatusNotifier          statusNotifier;
 
-bool isEquals(char const* const target, char* current, int length) {
-    for (int i = 0; i < length; i++) {
-        if (target[i] == '\0') {
-            break;
-        }
-
-        if (target[i] != current[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 void handleClientMessage(MessageStruct message) {
-    if (isEquals(MessagingParticipant::E_SERVER_STATUS_NOTIFIER, message.target, sizeof(message.target))) {
+    if (cmpstrs(MessagingParticipant::E_SERVER_STATUS_NOTIFIER, message.target, sizeof(message.target))) {
         statusNotifier.handleIncomingMessage(message);
     }
 }
