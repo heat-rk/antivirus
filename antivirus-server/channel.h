@@ -15,9 +15,9 @@ namespace Antivirus {
         HANDLE outputPipe;
         HANDLE pipeThread;
     public:
-        Channel();
-        void listen(std::function<void(MessageStruct)> onMessage);
-        void write(MessageStruct message);
+        void init();
+        void listen(std::function<void(Message)> onMessage);
+        void write(Message message);
         void disconnect();
     };
 }

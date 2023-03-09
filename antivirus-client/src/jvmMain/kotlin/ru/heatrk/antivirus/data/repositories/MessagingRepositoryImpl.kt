@@ -1,24 +1,26 @@
 package ru.heatrk.antivirus.data.repositories
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import ru.heatrk.antivirus.data.api.AntivirusApi
 import ru.heatrk.antivirus.data.models.ApiMessage
-import ru.heatrk.antivirus.domain.models.Message
+import ru.heatrk.antivirus.data.models.MessageStatus
+import ru.heatrk.antivirus.data.models.structs.MessageBodyStatusStruct
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
-import ru.heatrk.antivirus.mappers.incoming.toDomain
-import ru.heatrk.antivirus.mappers.outgoing.toStruct
 
 class MessagingRepositoryImpl(
     private val antivirusApi: AntivirusApi,
     private val ioDispatcher: CoroutineDispatcher
 ): MessagingRepository {
-    override val incomingMessages get() = antivirusApi.incomingMessages
-        .map { it.toDomain() }
+    override suspend fun getStatus() = withContext(ioDispatcher) {
+        val response = antivirusApi.getStatus()
 
-    override suspend fun sendMessage(message: Message) = withContext(ioDispatcher) {
-        antivirusApi.send(message.toStruct())
+        if (response is ApiMessage.Ok && response.body.status == MessageStatus.OK.id) {
+            val body = MessageBodyStatusStruct.create(response.body.body)
+            body.status == MessageBodyStatusStruct.OK
+        } else {
+            false
+        }
     }
 
     override suspend fun isServiceEnabled() = withContext(ioDispatcher) {

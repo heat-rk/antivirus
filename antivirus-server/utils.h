@@ -3,17 +3,19 @@
 #include <stdio.h>
 #include <chrono>
 
-#include "MessageStruct.h"
+#include "Message.h"
 
 namespace Antivirus {
 	int64_t timeSinceEpochMillis();
 
-	MessageStruct generateMessage(
-		const char* source,
-		const char* target,
-		int8_t type,
-		void* body
+	Message generateMessage(
+		char* method,
+		char* uuid,
+		int8_t status,
+		Serializable* body
 	);
 
 	bool cmpstrs(char const* const target, char* current, int length);
+
+	void printBytes(int8_t* bytes, int length);
 }

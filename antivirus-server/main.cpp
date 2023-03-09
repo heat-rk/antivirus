@@ -4,7 +4,7 @@
 #include "Utils.h"
 #include "Channel.h"
 #include "StatusNotifier.h"
-#include "MessagingParticipant.h"
+#include "MessageMethod.h"
 #include "ServiceManager.h"
 
 using namespace Antivirus;
@@ -18,14 +18,19 @@ HANDLE                  g_ServiceStopEvent = INVALID_HANDLE_VALUE;
 Channel                 channel;
 StatusNotifier          statusNotifier;
 
-void handleClientMessage(MessageStruct message) {
-    if (cmpstrs(MessagingParticipant::E_SERVER_STATUS_NOTIFIER, message.target, sizeof(message.target))) {
+void handleClientMessage(Message message) {
+    if (cmpstrs(MessageMethod::E_GET_STATUS, message.method, sizeof(message.method))) {
         statusNotifier.handleIncomingMessage(message);
     }
 }
 
 void init() {
-    statusNotifier.setOutgoingMessagesHandler([](MessageStruct message) { channel.write(message); });
+    channel.init();
+    statusNotifier.setOutgoingMessagesHandler([](Message message) { channel.write(message); });
+}
+
+void destroy() {
+    channel.disconnect();
 }
 
 VOID WINAPI ServiceCtrlHandler(DWORD dwControl) {
@@ -72,7 +77,7 @@ VOID WINAPI ServiceCtrlHandler(DWORD dwControl) {
 
 DWORD WINAPI ServiceWorkerThread(LPVOID lpParam) {
     while (WaitForSingleObject(g_ServiceStopEvent, 0) != WAIT_OBJECT_0) {
-        channel.listen([](MessageStruct message) { handleClientMessage(message); });
+        channel.listen([](Message message) { handleClientMessage(message); });
     }
 
     return ERROR_SUCCESS;
@@ -128,6 +133,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
 
     HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
     WaitForSingleObject(hThread, INFINITE);
+    destroy();
 
     CloseHandle(g_ServiceStopEvent);
 
@@ -153,6 +159,7 @@ int wmain(int argc, wchar_t* argv[]) {
             init();
             HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
             WaitForSingleObject(hThread, INFINITE);
+            destroy();
         }
     } else {
         ServiceManager sm { reinterpret_cast<char16_t*>(argv[0]) };

@@ -1,31 +1,30 @@
 #include "Utils.h"
-#include "MessageStruct.h"
+#include "Message.h"
 
 using namespace Antivirus;
+using namespace std::chrono;
 
 int64_t Antivirus::timeSinceEpochMillis() {
-	using namespace std::chrono;
 	return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
-MessageStruct Antivirus::generateMessage(
-	const char* source,
-	const char* target,
-	int8_t type,
-	void* body
+Message Antivirus::generateMessage(
+	char* method,
+	char* uuid,
+	int8_t status,
+	Serializable* body
 ) {
-	MessageStruct message;
-	snprintf(message.source, sizeof(message.source), "%s", source);
-	snprintf(message.target, sizeof(message.target), "%s", target);
+	Message message;
 
-	message.type = type;
+	snprintf(message.method, sizeof(message.method), "%s", method);
+	snprintf(message.uuid, sizeof(message.uuid), "%s", uuid);
+
+	message.status = status;
 	message.timestamp = timeSinceEpochMillis();
 
-	int8_t* bytes = reinterpret_cast<int8_t*>(body);
-
-	for (int i = 0; i < sizeof(message.body); i++) {
-		message.body[i] = bytes[i];
-	}
+	ByteBuffer byteBuffer(sizeof(message.body));
+	body->write(&byteBuffer);
+	byteBuffer.getInt8(message.body, sizeof(message.body));
 
 	return message;
 }
@@ -42,4 +41,12 @@ bool Antivirus::cmpstrs(char const* const target, char* current, int length) {
 	}
 
 	return true;
+}
+
+void Antivirus::printBytes(int8_t* bytes, int length) {
+	for (int i = 0; i < length; i++) {
+		printf("%d ", bytes[i]);
+	}
+
+	printf("\n");
 }

@@ -1,30 +1,29 @@
 #include <iostream>
 
 #include "StatusNotifier.h"
-#include "IncomingMessageTypes.h"
-#include "OutgoingMessageTypes.h"
-#include "OutgoingMessageBodyStatusStruct.h"
-#include "MessagingParticipant.h"
+#include "MessageStatus.h"
+#include "OutgoingMessageBodyStatus.h"
+#include "MessageMethod.h"
 #include "Utils.h"
 
 using namespace Antivirus;
 
-void StatusNotifier::handleIncomingMessage(MessageStruct message) {
-	if (message.type == IncomingMessageType::E_STATUS_REQUEST) {
-		OutgoingMessageBodyStatusStruct body;
-		body.status = MessageStatus::E_OK;
+void StatusNotifier::handleIncomingMessage(Message incomingMessage) {
+	if (cmpstrs(MessageMethod::E_GET_STATUS, incomingMessage.method, sizeof(incomingMessage.method))) {
+		OutgoingMessageBodyStatus body;
+		body.status = StatusValue::E_STATUS_OK;
 
-		MessageStruct message = generateMessage(
-			MessagingParticipant::E_SERVER_STATUS_NOTIFIER,
-			MessagingParticipant::E_CLIENT_STATUS_RECEIVER,
-			OutgoingMessageType::E_STATUS,
+		Message response = generateMessage(
+			incomingMessage.method,
+			incomingMessage.uuid,
+			MessageStatus::E_OK,
 			&body
 		);
 
-		outgoingMessagesHandler(message);
+		outgoingMessagesHandler(response);
 	}
 }
 
-void StatusNotifier::setOutgoingMessagesHandler(std::function<void(MessageStruct)> onMessage) {
+void StatusNotifier::setOutgoingMessagesHandler(std::function<void(Message)> onMessage) {
 	this->outgoingMessagesHandler = onMessage;
 }

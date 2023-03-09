@@ -86,6 +86,7 @@ class AntivirusRootComponent(
 
                 when (val result = messagingRepository.startService()) {
                     is ApiMessage.Ok -> {
+                        println(messagingRepository.getStatus())
                         serviceControlComponent.onStatusReceived(true)
                     }
 

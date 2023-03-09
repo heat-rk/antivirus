@@ -330,7 +330,7 @@ int ServiceManager::stopService() {
         printf("Service is already stopped.\n");
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
-        return -1;
+        return 0;
     }
 
     // If a stop is pending, wait for it.

@@ -7,7 +7,11 @@ import com.sun.jna.ptr.IntByReference
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.transformWhile
 import ru.heatrk.antivirus.data.models.ApiMessage
+import ru.heatrk.antivirus.data.models.MessageMethod
+import ru.heatrk.antivirus.data.models.MessageStatus
 import ru.heatrk.antivirus.data.models.structs.MessageStruct
 
 class AntivirusApiImpl: AntivirusApi {
@@ -19,7 +23,7 @@ class AntivirusApiImpl: AntivirusApi {
     private var pipeListeningJob: Job? = null
 
     private val _incomingMessages = MutableSharedFlow<ApiMessage<MessageStruct>>()
-    override val incomingMessages = _incomingMessages.asSharedFlow()
+    private val incomingMessages = _incomingMessages.asSharedFlow()
 
     private var outputPipe: HANDLE = WinNT.INVALID_HANDLE_VALUE
     private var inputPipe: HANDLE = WinNT.INVALID_HANDLE_VALUE
@@ -30,25 +34,28 @@ class AntivirusApiImpl: AntivirusApi {
         }
     }
 
-    override suspend fun send(struct: MessageStruct): ApiMessage<Unit> {
-        val bytes = ByteArray(PIPE_BUFFSIZE).also { struct.write(it) }
-
-        return if (
-            kernel32.WriteFile(
-                outputPipe,
-                bytes,
-                PIPE_BUFFSIZE,
-                IntByReference(),
-                null
-            )
-        ) {
-            ApiMessage.Ok(Unit)
-        } else {
-            ApiMessage.Fail(
-                description = "Output pipe writing",
-                errorCode = kernel32.GetLastError()
-            )
+    override suspend fun getStatus(): ApiMessage<MessageStruct> {
+        val requestMessage = MessageStruct().apply {
+            MessageMethod.GET_STATUS.id.copyInto(this.method)
+            status = MessageStatus.REQUEST.id
         }
+
+        withTimeoutOrNull(REQUEST_TIMEOUT) {
+            send(requestMessage)
+        }
+
+        val responseMessage = withTimeoutOrNull(RESPONSE_TIMEOUT) {
+            incomingMessages.transformWhile { message ->
+                if (message is ApiMessage.Ok && message.body.isUuidEquals(requestMessage)) {
+                    emit(message)
+                    return@transformWhile false
+                }
+
+                return@transformWhile true
+            }.first()
+        }
+
+        return responseMessage ?: ApiMessage.Fail("Request timeout")
     }
 
     override suspend fun isServiceEnabled(): ApiMessage<Boolean> {
@@ -234,6 +241,27 @@ class AntivirusApiImpl: AntivirusApi {
         pipeListeningJob = null
         inputPipe = WinNT.INVALID_HANDLE_VALUE
         outputPipe = WinNT.INVALID_HANDLE_VALUE
+    }
+
+    private fun send(struct: MessageStruct): ApiMessage<Unit> {
+        val bytes = ByteArray(PIPE_BUFFSIZE).also { struct.write(it) }
+
+        return if (
+            kernel32.WriteFile(
+                outputPipe,
+                bytes,
+                PIPE_BUFFSIZE,
+                IntByReference(),
+                null
+            )
+        ) {
+            ApiMessage.Ok(Unit)
+        } else {
+            ApiMessage.Fail(
+                description = "Output pipe writing",
+                errorCode = kernel32.GetLastError()
+            )
+        }
     }
 
     private suspend fun startWindowsService(): ApiMessage<Unit> {
@@ -559,5 +587,7 @@ class AntivirusApiImpl: AntivirusApi {
         private const val PIPE_BUFFSIZE = 512
         private const val ANTIVIRUS_SERVICE_NAME = "AntivirusService"
         private const val WINDOWS_SERVICE_STOP_TIMEOUT = 30000
+        private const val REQUEST_TIMEOUT = 5000L
+        private const val RESPONSE_TIMEOUT = 5000L
     }
 }

@@ -29,6 +29,9 @@ class MessageBodyStatusStruct : SerializableStruct() {
     }
 
     companion object : Deserializer<MessageBodyStatusStruct>() {
+        const val OK: Byte = 0
+        const val ERROR: Byte = 1
+
         override val size = 1
 
         override fun create(byteBuffer: ByteBuffer) = MessageBodyStatusStruct().apply {

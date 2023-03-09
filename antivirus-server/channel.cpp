@@ -8,15 +8,7 @@ using namespace Antivirus;
 #define PIPE_SERVICE_OUTPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-output"
 #define PIPE_BUFFSIZE 512
 
-void printBytes(int8_t* bytes, int length) {
-    for (int i = 0; i < length; i++) {
-        printf("%d ", bytes[i]);
-    }
-
-    printf("\n");
-}
-
-Channel::Channel() {
+void Channel::init() {
     inputPipe = CreateNamedPipe(
         TEXT(PIPE_SERVICE_INPUT_PATH),
         PIPE_ACCESS_INBOUND,
@@ -50,7 +42,7 @@ Channel::Channel() {
     }
 }
 
-void Channel::listen(std::function<void(MessageStruct)> onMessage) {
+void Channel::listen(std::function<void(Message)> onMessage) {
     printf("Waiting for client...\n");
 
     if (ConnectNamedPipe(inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
@@ -70,7 +62,8 @@ void Channel::listen(std::function<void(MessageStruct)> onMessage) {
             printf("[INPUT] Size of message in bytes: %d\n", sizeof(buffer));
             printBytes(buffer, sizeof(buffer));
             printf("[INPUT] Body end ---------------------\n");
-            onMessage(*(MessageStruct*)buffer);
+            Message message = messageDeserializer.createFromBytes(buffer, sizeof(buffer));
+            onMessage(message);
         }
 
         DisconnectNamedPipe(inputPipe);
@@ -84,16 +77,16 @@ void Channel::listen(std::function<void(MessageStruct)> onMessage) {
     }
 }
 
-void Channel::write(MessageStruct message) {
+void Channel::write(Message message) {
     printf("Writing...\n");
 
     printf("Body -------------------------\n");
 
-    int8_t* bytes = reinterpret_cast<int8_t*>(&message);
+    int8_t bytes[MESSAGE_BYTES_LENGTH];
 
-    printf("Size of message in bytes: %d\n", sizeof(message));
+    message.writeToBytes(bytes, sizeof(bytes));
 
-    printBytes(reinterpret_cast<int8_t*>(&message), sizeof(message));
+    printBytes(bytes, sizeof(MESSAGE_BYTES_LENGTH));
 
     printf("Body end ---------------------\n");
 
@@ -102,7 +95,7 @@ void Channel::write(MessageStruct message) {
         return;
     }
 
-    if (WriteFile(outputPipe, &message, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
+    if (WriteFile(outputPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
         printf("Write failed, GLE=%d.\n", GetLastError());
         return;
     }

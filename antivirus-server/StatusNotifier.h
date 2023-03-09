@@ -2,14 +2,14 @@
 
 #include <functional>
 
-#include "MessageStruct.h"
+#include "Message.h"
 
 namespace Antivirus {
 	class StatusNotifier {
 	private:
-		std::function<void(MessageStruct)> outgoingMessagesHandler;
+		std::function<void(Message)> outgoingMessagesHandler;
 	public:
-		void handleIncomingMessage(MessageStruct message);
-		void setOutgoingMessagesHandler(std::function<void(MessageStruct)> onMessage);
+		void handleIncomingMessage(Message message);
+		void setOutgoingMessagesHandler(std::function<void(Message)> onMessage);
 	};
 }
