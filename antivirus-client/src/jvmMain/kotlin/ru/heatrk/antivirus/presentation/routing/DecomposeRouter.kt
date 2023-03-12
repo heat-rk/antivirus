@@ -13,8 +13,8 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.parcelable.Parcelable
 import org.kodein.di.DI
 import org.kodein.di.instance
-import ru.heatrk.tasktimetracker.presentation.ru.heatrk.antivirus.presentation.screens.antivirus_root.AntivirusRootComponent
-import ru.heatrk.tasktimetracker.presentation.ru.heatrk.antivirus.presentation.screens.antivirus_root.AntivirusRootScreen
+import ru.heatrk.antivirus.presentation.screens.antivirus_root.AntivirusRootComponent
+import ru.heatrk.antivirus.presentation.screens.antivirus_root.AntivirusRootScreen
 
 class DecomposeRouter(
     componentContext: ComponentContext,

@@ -7,9 +7,7 @@ import androidx.compose.ui.graphics.Color
 
 @Immutable
 data class ApplicationColors(
-    val pomodoroChilling: Color,
-    val pomodoroWorking: Color,
-    val onPomodoro: Color,
+
     val primaryDisabled: Color,
     val materialColors: androidx.compose.material.Colors
 ) {
@@ -31,9 +29,6 @@ data class ApplicationColors(
 val LocalApplicationColors = staticCompositionLocalOf { lightApplicationColors }
 
 val lightApplicationColors = ApplicationColors(
-    pomodoroChilling = Color(0xFF488535),
-    pomodoroWorking = Color(0xFFA63838),
-    onPomodoro = Color(0xFFFFFFFF),
     primaryDisabled = Color(0xFFBBA7D1),
     materialColors = lightColors(
         primary = Color(0xFF8D28FA),
@@ -52,9 +47,6 @@ val lightApplicationColors = ApplicationColors(
 )
 
 val darkApplicationColors = ApplicationColors(
-    pomodoroChilling = Color(0xFF488535),
-    pomodoroWorking = Color(0xFFA63838),
-    onPomodoro = Color(0xFFFFFFFF),
     primaryDisabled = Color(0xFFBBA7D1),
     materialColors = lightColors(
         primary = Color(0xFF8D28FA),

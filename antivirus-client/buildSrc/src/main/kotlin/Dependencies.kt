@@ -20,4 +20,9 @@ object Dependencies {
         val essenty = "0.7.0"
         val coroutines = "1.6.4"
     }
+
+    object Files {
+        val jnaCore = "libs/jna-5.13.0.jar"
+        val jnaPlatform = "libs/jna-platform-5.13.0.jar"
+    }
 }

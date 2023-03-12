@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Исходные файлы">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Исходные файлы\utils">
+      <UniqueIdentifier>{40f862e3-6560-4c3b-befd-602da3caa2e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core">
+      <UniqueIdentifier>{f25f1df2-271a-4ffd-9e7d-f87a1402eb50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core\ipc">
+      <UniqueIdentifier>{2cb83729-d60b-4fe8-a4fe-622c5ccaf2b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core\service">
+      <UniqueIdentifier>{c23fedc9-dfea-4b0e-b2c4-d92e463b99e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core\serialization">
+      <UniqueIdentifier>{16e8d7bd-0e95-49a9-8ca0-624c144d37d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core\serialization\byte_buffer">
+      <UniqueIdentifier>{d2be4d21-48c9-4a02-b615-d83c247954d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\app">
+      <UniqueIdentifier>{19d60940-ecef-48ed-82a4-b8171396263b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\app\status_notifier">
+      <UniqueIdentifier>{a2106822-0369-4339-80e4-545809429edf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\app\scanner">
+      <UniqueIdentifier>{9d0c7b2a-3d80-4de9-ab24-decb9b601abb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\app\models">
+      <UniqueIdentifier>{9227db2d-8b76-4469-b1af-4f34b9af7071}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\app\models\outgoing">
+      <UniqueIdentifier>{91d63afa-544d-4c92-9464-efef33691928}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusNotifier.cpp">
+      <Filter>Исходные файлы\app\status_notifier</Filter>
+    </ClCompile>
+    <ClCompile Include="Scanner.cpp">
+      <Filter>Исходные файлы\app\scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Channel.cpp">
+      <Filter>Исходные файлы\core\ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceManager.cpp">
+      <Filter>Исходные файлы\core\service</Filter>
+    </ClCompile>
+    <ClCompile Include="ByteBuffer.cpp">
+      <Filter>Исходные файлы\core\serialization\byte_buffer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Message.h">
+      <Filter>Исходные файлы\app\models</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusNotifier.h">
+      <Filter>Исходные файлы\app\status_notifier</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Scanner.h">
+      <Filter>Исходные файлы\app\scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="OutgoingMessageBodyError.h">
+      <Filter>Исходные файлы\app\models\outgoing</Filter>
+    </ClInclude>
+    <ClInclude Include="OutgoingMessageBodyStatus.h">
+      <Filter>Исходные файлы\app\models\outgoing</Filter>
+    </ClInclude>
+    <ClInclude Include="Channel.h">
+      <Filter>Исходные файлы\core\ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceManager.h">
+      <Filter>Исходные файлы\core\service</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageStatus.h">
+      <Filter>Исходные файлы\app\models</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageMethod.h">
+      <Filter>Исходные файлы\app\models</Filter>
+    </ClInclude>
+    <ClInclude Include="ByteBuffer.h">
+      <Filter>Исходные файлы\core\serialization\byte_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="Serializable.h">
+      <Filter>Исходные файлы\core\serialization</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

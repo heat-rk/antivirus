@@ -5,6 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material.Typography
 
 @Composable
 fun ApplicationTheme(content: @Composable () -> Unit) {
@@ -27,4 +28,8 @@ object ApplicationTheme {
     val shapes: Shapes
         @Composable
         get() = MaterialTheme.shapes
+
+    val typography: Typography
+        @Composable
+        get() = MaterialTheme.typography
 }
