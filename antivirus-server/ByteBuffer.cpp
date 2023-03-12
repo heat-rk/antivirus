@@ -35,11 +35,6 @@ uint32_t ByteBuffer::size() {
 	return buf.size();
 }
 
-/*
-int8_t ByteBuffer::getInt8(uint32_t index) const {
-	return read<int8_t>(index);
-}*/
-
 void ByteBuffer::getInt8(int8_t* buffer, uint32_t length) const {
 	for (uint32_t i = 0; i < length; i++) {
 		buffer[i] = getInt8();
