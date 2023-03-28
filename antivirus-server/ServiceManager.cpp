@@ -1,7 +1,15 @@
 #include <Windows.h>
 #include <stdio.h>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <string>
 
+#include "SignatureBaseFile.h"
+#include "Sha256.h"
 #include "ServiceManager.h"
+#include "Utils.h"
+#include "ByteBuffer.h"
 
 using namespace Antivirus;
 using namespace std;
@@ -423,5 +431,67 @@ int ServiceManager::stopService() {
 
     printf("Service stopped successfully\n");
 
+    return 0;
+}
+
+int ServiceManager::loadBaseInput(wchar_t* path) {
+    SignatureBaseFileWriter baseWriter;
+    baseWriter.open((wchar_t*)L"antivirus-base", true);
+
+    ifstream file;
+    file.open(path);
+    
+    VirusSignature signature;
+    VirusRecord record;
+    Sha256 sha256;
+    uint8_t* hash;
+    std::string line;
+    int8_t* signatureBytes;
+    uint32_t i;
+    ByteBuffer firstBytesBuffer(sizeof(signature.first));
+
+    while (!file.eof()) {
+        getline(file, line);
+        signature.offset = toUInt32(line);
+
+        getline(file, line);
+        signature.length = toUInt32(line);
+
+        getline(file, line);
+        signatureBytes = new int8_t[signature.length];
+        stringstream signatureBytesStream(line);
+
+        i = 0;
+
+        while (getline(signatureBytesStream, line, ' ')) {
+            signatureBytes[i++] = toInt8(line);
+        }
+
+        sha256.update(signatureBytes, signature.length);
+        hash = sha256.digest();
+        copy(hash, hash + HASH_SIZE, signature.hash);
+
+        firstBytesBuffer.put(signatureBytes, firstBytesBuffer.size());
+        signature.first = firstBytesBuffer.getInt64();
+
+        getline(file, line);
+        record.nameLength = toUInt8(line);
+
+        getline(file, line);
+        record.name = (char*) line.c_str();
+
+        record.signature = signature;
+        baseWriter.addRecord(record);
+
+        delete signatureBytes;
+
+        getline(file, line);
+
+        if (line.compare(";") != 0) {
+            break;
+        }
+    }
+
+    baseWriter.close();
     return 0;
 }

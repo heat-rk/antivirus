@@ -1,5 +1,6 @@
 ﻿#include <stdio.h>
 #include <Windows.h>
+#include <algorithm>
 
 #include "Utils.h"
 #include "Channel.h"
@@ -8,6 +9,7 @@
 #include "ServiceManager.h"
 
 using namespace Antivirus;
+using namespace std;
 
 wchar_t const* const SERVICE_NAME = TEXT("AntivirusService");
 
@@ -164,14 +166,17 @@ int wmain(int argc, wchar_t* argv[]) {
     } else {
         ServiceManager sm { reinterpret_cast<char16_t*>(argv[0]) };
 
-        if (wcscmp(argv[argc - 1], L"--install") == 0) {
+        if (wcscmp(argv[1], L"--install") == 0) {
             sm.installService();
         }
-        else if (wcscmp(argv[argc - 1], L"--uninstall") == 0) {
+        else if (wcscmp(argv[1], L"--uninstall") == 0) {
             sm.uninstallService();
         }
-        else if (wcscmp(argv[argc - 1], L"--start") == 0) {
+        else if (wcscmp(argv[1], L"--start") == 0) {
             sm.runService();
+        }
+        else if (wcscmp(argv[1], L"--load-base") == 0) {
+            sm.loadBaseInput(argv[2]);
         }
     }
 

@@ -1,6 +1,9 @@
 #include "Utils.h"
 #include "Message.h"
 
+#include <sstream>
+#include <Windows.h>
+
 using namespace Antivirus;
 using namespace std::chrono;
 
@@ -49,4 +52,25 @@ void Antivirus::printBytes(int8_t* bytes, int length) {
 	}
 
 	printf("\n");
+}
+
+bool Antivirus::isFileExist(wchar_t* filename) {
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, filename, -1, NULL, 0, NULL, NULL);
+	char* str = new char[size_needed]; 
+	WideCharToMultiByte(CP_UTF8, 0, filename, -1, str, size_needed, NULL, NULL);
+	bool isExists = GetFileAttributesA(str) != DWORD(-1);
+	delete[] str;
+	return isExists;
+};
+
+int8_t Antivirus::toInt8(std::string str) {
+	return std::stoi(str);
+}
+
+uint8_t Antivirus::toUInt8(std::string str) {
+	return static_cast<uint8_t>(std::stoul(str));
+}
+
+uint32_t Antivirus::toUInt32(std::string str) {
+	return static_cast<uint32_t>(std::stoul(str));
 }

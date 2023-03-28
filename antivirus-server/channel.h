@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "Utils.h"
+#include "Message.h"
 
 using namespace std;
 

@@ -49,6 +49,14 @@ int8_t ByteBuffer::getInt8() const {
 	return value;
 }
 
+uint8_t ByteBuffer::getUInt8() const {
+	uint8_t value = buf[rpos] + 128;
+
+	rpos += 1;
+
+	return value;
+}
+
 int16_t ByteBuffer::getInt16() const {
 	int16_t value =
 		((buf[rpos + 0] & 0xFF) << 8) +
@@ -65,6 +73,18 @@ int32_t ByteBuffer::getInt32() const {
 		((buf[rpos + 1] & 0xFF) << 16) +
 		((buf[rpos + 2] & 0xFF) << 8) +
 		((buf[rpos + 3] & 0xFF) << 0);
+
+	rpos += 4;
+
+	return value;
+}
+
+uint32_t ByteBuffer::getUInt32() const {
+	uint32_t value =
+		(((buf[rpos + 0] & 0xFF) << 24) +
+		((buf[rpos + 1] & 0xFF) << 16) +
+		((buf[rpos + 2] & 0xFF) << 8) +
+		((buf[rpos + 3] & 0xFF) << 0)) + 2147483648;
 
 	rpos += 4;
 
@@ -115,6 +135,15 @@ void ByteBuffer::put(int8_t value) {
 	wpos += 1;
 }
 
+void ByteBuffer::put(uint8_t value) {
+	if (size() < (wpos + 1))
+		buf.resize(wpos + 1);
+
+	buf[wpos] = value - 128;
+
+	wpos += 1;
+}
+
 void ByteBuffer::put(int16_t value) {
 	if (size() < (wpos + 2))
 		buf.resize(wpos + 2);
@@ -128,6 +157,20 @@ void ByteBuffer::put(int16_t value) {
 void ByteBuffer::put(int32_t value) {
 	if (size() < (wpos + 4))
 		buf.resize(wpos + 4);
+
+	buf[wpos + 0] = (value >> 24) & 0xFF;
+	buf[wpos + 1] = (value >> 16) & 0xFF;
+	buf[wpos + 2] = (value >> 8) & 0xFF;
+	buf[wpos + 3] = (value >> 0) & 0xFF;
+
+	wpos += 4;
+}
+
+void ByteBuffer::put(uint32_t value) {
+	if (size() < (wpos + 4))
+		buf.resize(wpos + 4);
+
+	value -= 2147483648;
 
 	buf[wpos + 0] = (value >> 24) & 0xFF;
 	buf[wpos + 1] = (value >> 16) & 0xFF;

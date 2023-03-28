@@ -46,6 +46,12 @@
     <Filter Include="Исходные файлы\app\models\outgoing">
       <UniqueIdentifier>{91d63afa-544d-4c92-9464-efef33691928}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\core\signatures">
+      <UniqueIdentifier>{226496c6-bd77-45c4-b3d9-f89313714601}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core\sha256">
+      <UniqueIdentifier>{a3078563-5d27-4970-8962-4255c3b74cb7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -68,6 +74,12 @@
     </ClCompile>
     <ClCompile Include="ByteBuffer.cpp">
       <Filter>Исходные файлы\core\serialization\byte_buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="Sha256.cpp">
+      <Filter>Исходные файлы\core\sha256</Filter>
+    </ClCompile>
+    <ClCompile Include="SignatureBaseFile.cpp">
+      <Filter>Исходные файлы\core\signatures</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +118,18 @@
     </ClInclude>
     <ClInclude Include="Serializable.h">
       <Filter>Исходные файлы\core\serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="VirusSignature.h">
+      <Filter>Исходные файлы\core\signatures</Filter>
+    </ClInclude>
+    <ClInclude Include="Sha256.h">
+      <Filter>Исходные файлы\core\sha256</Filter>
+    </ClInclude>
+    <ClInclude Include="VirusRecord.h">
+      <Filter>Исходные файлы\core\signatures</Filter>
+    </ClInclude>
+    <ClInclude Include="SignatureBaseFile.h">
+      <Filter>Исходные файлы\core\signatures</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

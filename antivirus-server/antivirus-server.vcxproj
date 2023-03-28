@@ -187,6 +187,8 @@
     <ClCompile Include="Channel.cpp" />
     <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="ServiceManager.cpp" />
+    <ClCompile Include="Sha256.cpp" />
+    <ClCompile Include="SignatureBaseFile.cpp" />
     <ClCompile Include="StatusNotifier.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
@@ -200,9 +202,13 @@
     <ClInclude Include="OutgoingMessageBodyStatus.h" />
     <ClInclude Include="Serializable.h" />
     <ClInclude Include="ServiceManager.h" />
+    <ClInclude Include="Sha256.h" />
+    <ClInclude Include="SignatureBaseFile.h" />
     <ClInclude Include="StatusNotifier.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="VirusRecord.h" />
+    <ClInclude Include="VirusSignature.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
