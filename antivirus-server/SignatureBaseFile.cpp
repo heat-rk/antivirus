@@ -7,19 +7,19 @@ using namespace Antivirus;
 #define SIGN "AvtomatPls"
 
 SignatureBaseFile::SignatureBaseFile() {
-	this->recordsCount = 0;
+	this->m_recordsCount = 0;
 }
 
 void SignatureBaseFile::close() {
-	if (file.is_open()) file.close();
+	if (m_file.is_open()) m_file.close();
 }
 
 bool SignatureBaseFile::isOpen() {
-	return file.is_open();
+	return m_file.is_open();
 }
 
 uint32_t SignatureBaseFile::getRecordsCount() {
-	return this->recordsCount;
+	return this->m_recordsCount;
 }
 
 
@@ -29,41 +29,41 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 	if (filename == NULL) return false;
 
 	if (!isFileExist(filename) || trunc) {
-		file.open(filename, ios::out | ios::binary);
+		m_file.open(filename, ios::out | ios::binary);
 
-		if (!file.is_open()) return false;
+		if (!m_file.is_open()) return false;
 
 		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(uint32_t));
 
 		byteBuffer.put((char*)SIGN, sizeof(SIGN));
-		byteBuffer.put(this->recordsCount);
+		byteBuffer.put(this->m_recordsCount);
 
 		char* bytes = new char[byteBuffer.size()];
 		byteBuffer.getChars(bytes, byteBuffer.size());
 
-		file.write(bytes, byteBuffer.size());
+		m_file.write(bytes, byteBuffer.size());
 
 		delete bytes;
 	} else {
-		file.open(filename, ios::in | ios::out | ios::binary);
+		m_file.open(filename, ios::in | ios::out | ios::binary);
 
-		if (!file.is_open()) return false;
+		if (!m_file.is_open()) return false;
 
 		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(uint32_t));
 
 		char* bytes = new char[byteBuffer.size()];
-		file.read(bytes, byteBuffer.size());
+		m_file.read(bytes, byteBuffer.size());
 		byteBuffer.put(bytes, byteBuffer.size());
 
 		char sign[sizeof(SIGN)];
 		byteBuffer.getChars(sign, sizeof(SIGN));
 
 		if (memcmp(sign, SIGN, sizeof(SIGN))) {
-			file.close();
+			m_file.close();
 			return false;
 		}
 
-		this->recordsCount = byteBuffer.getUInt32();
+		this->m_recordsCount = byteBuffer.getUInt32();
 
 		delete bytes;
 	}
@@ -73,9 +73,9 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 }
 
 bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
-	if (!file.is_open()) return false;
+	if (!m_file.is_open()) return false;
 
-	file.seekp(0, ios::end);
+	m_file.seekp(0, ios::end);
 
 	ByteBuffer byteBuffer(virusSignatureSize + record.nameLength + sizeof(uint8_t));
 	record.write(&byteBuffer);
@@ -83,22 +83,22 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 	char* bytes = new char[byteBuffer.size()];
 	byteBuffer.getChars(bytes, byteBuffer.size());
 
-	file.write(bytes, byteBuffer.size());
+	m_file.write(bytes, byteBuffer.size());
 
 	delete bytes;
 
-	file.seekp(sizeof(SIGN), ios::beg);
+	m_file.seekp(sizeof(SIGN), ios::beg);
 
-	this->recordsCount++;
+	this->m_recordsCount++;
 
 	byteBuffer.clear();
 	byteBuffer.resize(sizeof(uint32_t));
-	byteBuffer.put(this->recordsCount);
+	byteBuffer.put(this->m_recordsCount);
 
 	char* recordsCountBytes = new char[byteBuffer.size()];
 	byteBuffer.getChars(recordsCountBytes, byteBuffer.size());
 
-	file.write(recordsCountBytes, byteBuffer.size());
+	m_file.write(recordsCountBytes, byteBuffer.size());
 
 	delete recordsCountBytes;
 
@@ -111,25 +111,25 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 	if (filename == NULL) return false;
 
 	if (isFileExist(filename)) {
-		file.open(filename, ios::in | ios::out | ios::binary);
+		m_file.open(filename, ios::in | ios::out | ios::binary);
 
-		if (!file.is_open()) return false;
+		if (!m_file.is_open()) return false;
 
 		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(uint32_t));
 
 		char* bytes = new char[byteBuffer.size()];
-		file.read(bytes, byteBuffer.size());
+		m_file.read(bytes, byteBuffer.size());
 		byteBuffer.put(bytes, byteBuffer.size());
 
 		char sign[sizeof(SIGN)];
 		byteBuffer.getChars(sign, sizeof(SIGN));
 
 		if (memcmp(sign, SIGN, sizeof(SIGN))) {
-			file.close();
+			m_file.close();
 			return false;
 		}
 
-		this->recordsCount = byteBuffer.getUInt32();
+		this->m_recordsCount = byteBuffer.getUInt32();
 
 		delete bytes;
 	}
@@ -142,11 +142,11 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 }
 
 bool SignatureBaseFileReader::readRecord(VirusRecord* record) {
-	if (record == NULL || !file.is_open()) return false;
+	if (record == NULL || !m_file.is_open()) return false;
 
 	ByteBuffer byteBuffer(sizeof(uint8_t));
 	char nameLength[sizeof(uint8_t)];
-	file.read(nameLength, sizeof(nameLength));
+	m_file.read(nameLength, sizeof(nameLength));
 	byteBuffer.put(nameLength, sizeof(uint8_t));
 	record->nameLength = byteBuffer.getUInt8();
 
@@ -154,7 +154,7 @@ bool SignatureBaseFileReader::readRecord(VirusRecord* record) {
 	byteBuffer.resize(virusSignatureSize + record->nameLength);
 
 	char* bytes = new char[byteBuffer.size()];
-	file.read(bytes, byteBuffer.size());
+	m_file.read(bytes, byteBuffer.size());
 	byteBuffer.put(bytes, byteBuffer.size());
 
 	record->name = new char[record->nameLength];

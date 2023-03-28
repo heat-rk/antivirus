@@ -12,9 +12,9 @@ using namespace std;
 namespace Antivirus {
     class Channel {
     private:
-        HANDLE inputPipe;
-        HANDLE outputPipe;
-        HANDLE pipeThread;
+        HANDLE m_inputPipe;
+        HANDLE m_outputPipe;
+        HANDLE m_pipeThread;
     public:
         void init();
         void listen(std::function<void(Message)> onMessage);

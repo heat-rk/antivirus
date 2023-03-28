@@ -11,8 +11,8 @@ using namespace std;
 namespace Antivirus {
 	class SignatureBaseFile {
 	protected:
-		fstream file;
-		uint32_t recordsCount;
+		fstream m_file;
+		uint32_t m_recordsCount;
 	public:
 		SignatureBaseFile();
 		virtual void close();

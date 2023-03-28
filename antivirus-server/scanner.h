@@ -5,9 +5,15 @@
 namespace Antivirus {
 	class Scanner {
 	private:
-		HANDLE scannerThread;
+		bool m_isScanning;
+		HANDLE m_scannerThread;
 	public:
 		Scanner();
-		void start();
+
+		void start(char* path);
+		void pause();
+		void stop();
+
+		bool isScanning();
 	};
 }

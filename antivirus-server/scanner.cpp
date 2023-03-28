@@ -13,11 +13,12 @@ DWORD WINAPI scannerThreadHandler(LPVOID lpvParam) {
 }
 
 Scanner::Scanner() {
-	scannerThread = INVALID_HANDLE_VALUE;
+	m_scannerThread = INVALID_HANDLE_VALUE;
+    m_isScanning = false;
 }
 
-void Scanner::start() {
-	scannerThread = CreateThread(
+void Scanner::start(char* path) {
+	m_scannerThread = CreateThread(
         NULL,
         0,
         scannerThreadHandler,
@@ -26,10 +27,22 @@ void Scanner::start() {
         NULL
     );
 
-    if (scannerThread == NULL) {
+    if (m_scannerThread == NULL) {
         printf("Client thread creation failed, GLE=%d.\n", GetLastError());
         return;
     }
 
-    WaitForSingleObject(scannerThread, INFINITE);
+    WaitForSingleObject(m_scannerThread, INFINITE);
+}
+
+void Scanner::pause() {
+
+}
+
+void Scanner::stop() {
+
+}
+
+bool Scanner::isScanning() {
+    return false;
 }

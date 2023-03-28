@@ -20,10 +20,10 @@ void StatusNotifier::handleIncomingMessage(Message incomingMessage) {
 			&body
 		);
 
-		outgoingMessagesHandler(response);
+		m_outgoingMessagesHandler(response);
 	}
 }
 
 void StatusNotifier::setOutgoingMessagesHandler(std::function<void(Message)> onMessage) {
-	this->outgoingMessagesHandler = onMessage;
+	m_outgoingMessagesHandler = onMessage;
 }

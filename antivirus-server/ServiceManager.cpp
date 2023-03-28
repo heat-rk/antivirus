@@ -22,12 +22,12 @@ int ServiceManager::installService() {
 		return -1;
 	}
 
-	LPWSTR servicePath = reinterpret_cast<LPWSTR>(const_cast<char16_t*>(serviceBinaryPath));
+	LPWSTR servicePath = reinterpret_cast<LPWSTR>(const_cast<char16_t*>(m_serviceBinaryPath));
 
 	SC_HANDLE hService = CreateService(
 		hSCManager,
-		SERVICE_NAME,
-		SERVICE_DISPLAY_NAME,
+		m_SERVICE_NAME,
+		m_SERVICE_DISPLAY_NAME,
 		SERVICE_ALL_ACCESS,
 		SERVICE_WIN32_OWN_PROCESS,
 		SERVICE_AUTO_START,
@@ -64,7 +64,7 @@ int ServiceManager::uninstallService() {
 
 	SC_HANDLE hService = OpenServiceW(
 		hSCManager,
-		SERVICE_NAME,
+		m_SERVICE_NAME,
 		SERVICE_STOP | DELETE
 	);
 
@@ -107,7 +107,7 @@ int ServiceManager::runService() {
 
     SC_HANDLE schService = OpenService(
         schSCManager,         // SCM database 
-        SERVICE_NAME,            // name of service 
+        m_SERVICE_NAME,            // name of service 
         SERVICE_START | SERVICE_QUERY_STATUS
     );
 
@@ -308,7 +308,7 @@ int ServiceManager::stopService() {
 
     SC_HANDLE schService = OpenService(
         schSCManager,         // SCM database 
-        SERVICE_NAME,            // name of service 
+        m_SERVICE_NAME,            // name of service 
         SERVICE_STOP |
         SERVICE_QUERY_STATUS
     );

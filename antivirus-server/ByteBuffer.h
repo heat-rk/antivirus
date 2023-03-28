@@ -10,9 +10,9 @@
 namespace Antivirus {
 	class ByteBuffer {
 	private:
-		uint32_t wpos;
-		mutable uint32_t rpos;
-		std::vector<int8_t> buf;
+		uint32_t m_wpos;
+		mutable uint32_t m_rpos;
+		std::vector<int8_t> m_buf;
 	public:
 		ByteBuffer(uint32_t size = BB_DEFAULT_SIZE);
 		ByteBuffer(int8_t* arr, uint32_t size);

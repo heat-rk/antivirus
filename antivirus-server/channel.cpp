@@ -9,7 +9,7 @@ using namespace Antivirus;
 #define PIPE_BUFFSIZE 512
 
 void Channel::init() {
-    inputPipe = CreateNamedPipe(
+    m_inputPipe = CreateNamedPipe(
         TEXT(PIPE_SERVICE_INPUT_PATH),
         PIPE_ACCESS_INBOUND,
         PIPE_READMODE_BYTE | PIPE_WAIT,
@@ -20,7 +20,7 @@ void Channel::init() {
         NULL
     );
 
-    outputPipe = CreateNamedPipe(
+    m_outputPipe = CreateNamedPipe(
         TEXT(PIPE_SERVICE_OUTPUT_PATH),
         PIPE_ACCESS_OUTBOUND,
         PIPE_TYPE_BYTE | PIPE_WAIT,
@@ -31,12 +31,12 @@ void Channel::init() {
         NULL
     );
 
-    if (inputPipe == INVALID_HANDLE_VALUE) {
+    if (m_inputPipe == INVALID_HANDLE_VALUE) {
         printf("Input pipe creation failed, GLE=%d.\n", GetLastError());
         return;
     }
 
-    if (outputPipe == INVALID_HANDLE_VALUE) {
+    if (m_outputPipe == INVALID_HANDLE_VALUE) {
         printf("Output pipe creation failed, GLE=%d.\n", GetLastError());
         return;
     }
@@ -45,8 +45,8 @@ void Channel::init() {
 void Channel::listen(std::function<void(Message)> onMessage) {
     printf("Waiting for client...\n");
 
-    if (ConnectNamedPipe(inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-        if (ConnectNamedPipe(outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
+    if (ConnectNamedPipe(m_inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
+        if (ConnectNamedPipe(m_outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
             printf("[OUTPUT] Client connected.\n");
         }
         else {
@@ -57,7 +57,7 @@ void Channel::listen(std::function<void(Message)> onMessage) {
 
         int8_t buffer[PIPE_BUFFSIZE];
 
-        while (ReadFile(inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
+        while (ReadFile(m_inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
             printf("[INPUT] Message received.\n[INPUT] Body -------------------------\n");
             printf("[INPUT] Size of message in bytes: %d\n", sizeof(buffer));
             printBytes(buffer, sizeof(buffer));
@@ -66,8 +66,8 @@ void Channel::listen(std::function<void(Message)> onMessage) {
             onMessage(message);
         }
 
-        DisconnectNamedPipe(inputPipe);
-        DisconnectNamedPipe(outputPipe);
+        DisconnectNamedPipe(m_inputPipe);
+        DisconnectNamedPipe(m_outputPipe);
 
         printf("[INPUT] Client disconnected.\n");
         printf("[OUTPUT] Client disconnected.\n");
@@ -90,12 +90,12 @@ void Channel::write(Message message) {
 
     printf("Body end ---------------------\n");
 
-    if (outputPipe == INVALID_HANDLE_VALUE) {
+    if (m_outputPipe == INVALID_HANDLE_VALUE) {
         printf("Write failed because of pipe INVALID_HANDLE_VALUE.\n");
         return;
     }
 
-    if (WriteFile(outputPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
+    if (WriteFile(m_outputPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
         printf("Write failed, GLE=%d.\n", GetLastError());
         return;
     }
@@ -104,7 +104,7 @@ void Channel::write(Message message) {
 }
 
 void Channel::disconnect() {
-    CloseHandle(inputPipe);
-    CloseHandle(outputPipe);
-    CloseHandle(pipeThread);
+    CloseHandle(m_inputPipe);
+    CloseHandle(m_outputPipe);
+    CloseHandle(m_pipeThread);
 }
