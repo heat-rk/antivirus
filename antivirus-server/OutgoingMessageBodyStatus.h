@@ -28,5 +28,5 @@ namespace Antivirus {
 		}
 	};
 
-	const static OutgoingMessageBodyStatus::Deserializer outgoingMessageBodyDeserializer;
+	const static OutgoingMessageBodyStatus::Deserializer outgoingMessageBodyStatusDeserializer;
 }

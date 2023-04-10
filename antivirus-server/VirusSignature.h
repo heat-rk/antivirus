@@ -13,16 +13,16 @@ namespace Antivirus {
 		public:
 			virtual VirusSignature create(ByteBuffer byteBuffer) const override {
 				VirusSignature signature;
-				signature.offset = byteBuffer.getUInt32();
-				signature.length = byteBuffer.getUInt32();
+				signature.offset = byteBuffer.getInt32();
+				signature.length = byteBuffer.getInt32();
 				signature.first = byteBuffer.getInt64();
-				byteBuffer.getInt8(signature.hash, sizeof(signature.first));
+				byteBuffer.getInt8(signature.hash, sizeof(signature.hash));
 				return signature;
 			}
 		};
 
-		uint32_t offset;
-		uint32_t length;
+		int32_t offset;
+		int32_t length;
 		int64_t first;
 		int8_t hash[HASH_SIZE];
 

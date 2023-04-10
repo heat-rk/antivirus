@@ -18,5 +18,6 @@ namespace Antivirus {
 		int runService();
 		int stopService();
 		int loadBaseInput(wchar_t* path);
+		int scan(wchar_t* path);
 	};
 }

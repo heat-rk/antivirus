@@ -159,6 +159,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -182,6 +183,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AppDataProvider.cpp" />
     <ClCompile Include="ByteBuffer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Channel.cpp" />
@@ -193,11 +195,13 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AppDataProvider.h" />
     <ClInclude Include="ByteBuffer.h" />
     <ClInclude Include="Channel.h" />
     <ClInclude Include="OutgoingMessageBodyError.h" />
     <ClInclude Include="MessageStatus.h" />
     <ClInclude Include="MessageMethod.h" />
+    <ClInclude Include="OutgoingMessageBodyScan.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="OutgoingMessageBodyStatus.h" />
     <ClInclude Include="Serializable.h" />
@@ -207,8 +211,12 @@
     <ClInclude Include="StatusNotifier.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="VirusFileTypes.h" />
     <ClInclude Include="VirusRecord.h" />
     <ClInclude Include="VirusSignature.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="antivirus-base" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -178,6 +178,9 @@ int wmain(int argc, wchar_t* argv[]) {
         else if (wcscmp(argv[1], L"--load-base") == 0) {
             sm.loadBaseInput(argv[2]);
         }
+        else if (wcscmp(argv[1], L"--scan") == 0) {
+            sm.scan(argv[2]);
+        }
     }
 
     return 0;

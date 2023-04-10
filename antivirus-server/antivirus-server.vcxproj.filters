@@ -81,6 +81,9 @@
     <ClCompile Include="SignatureBaseFile.cpp">
       <Filter>Исходные файлы\core\signatures</Filter>
     </ClCompile>
+    <ClCompile Include="AppDataProvider.cpp">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Message.h">
@@ -131,5 +134,19 @@
     <ClInclude Include="SignatureBaseFile.h">
       <Filter>Исходные файлы\core\signatures</Filter>
     </ClInclude>
+    <ClInclude Include="VirusFileTypes.h">
+      <Filter>Исходные файлы\core\signatures</Filter>
+    </ClInclude>
+    <ClInclude Include="OutgoingMessageBodyScan.h">
+      <Filter>Исходные файлы\app\models\outgoing</Filter>
+    </ClInclude>
+    <ClInclude Include="AppDataProvider.h">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="antivirus-base">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
   </ItemGroup>
 </Project>

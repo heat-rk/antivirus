@@ -10,9 +10,14 @@
 #include "ServiceManager.h"
 #include "Utils.h"
 #include "ByteBuffer.h"
+#include "Scanner.h"
+#include "AppDataProvider.h"
+#include "VirusRecord.h"
 
 using namespace Antivirus;
 using namespace std;
+
+#define BASE_FILE_NAME L"antivirus-base"
 
 int ServiceManager::installService() {
 	SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
@@ -436,7 +441,18 @@ int ServiceManager::stopService() {
 
 int ServiceManager::loadBaseInput(wchar_t* path) {
     SignatureBaseFileWriter baseWriter;
-    baseWriter.open((wchar_t*)L"antivirus-base", true);
+
+    wchar_t* appdataPath;
+    appdataDirectory(&appdataPath);
+    
+    if (!CreateDirectory(appdataPath, NULL) &&
+        ERROR_ALREADY_EXISTS != GetLastError()) {
+        printf("Error creating app data directory (GLE = %d)\n", GetLastError());
+        return 1;
+    }
+
+    wcscat_s(appdataPath, MAX_PATH, BASE_FILE_NAME);
+    baseWriter.open(appdataPath, true);
 
     ifstream file;
     file.open(path);
@@ -452,10 +468,10 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
 
     while (!file.eof()) {
         getline(file, line);
-        signature.offset = toUInt32(line);
+        signature.offset = toInt32(line);
 
         getline(file, line);
-        signature.length = toUInt32(line);
+        signature.length = toInt32(line);
 
         getline(file, line);
         signatureBytes = new int8_t[signature.length];
@@ -475,7 +491,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
         signature.first = firstBytesBuffer.getInt64();
 
         getline(file, line);
-        record.nameLength = toUInt8(line);
+        record.nameLength = toInt8(line);
 
         getline(file, line);
         record.name = (char*) line.c_str();
@@ -493,5 +509,32 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     }
 
     baseWriter.close();
+    CoTaskMemFree(appdataPath);
+
+    return 0;
+}
+
+int ServiceManager::scan(wchar_t* path) {
+    Scanner scanner;
+    SignatureBaseFileReader baseReader;
+
+    wchar_t* appdataPath;
+    appdataDirectory(&appdataPath);
+    wcscat_s(appdataPath, MAX_PATH, BASE_FILE_NAME);
+
+    baseReader.open(appdataPath);
+
+    for (int i = 0; i < baseReader.getRecordsCount(); i++) {
+        VirusRecord record;
+        baseReader.readRecord(&record);
+        scanner.addRecord(record);
+    }
+
+    baseReader.close();
+
+    scanner.start(path);
+
+    CoTaskMemFree(appdataPath);
+
     return 0;
 }

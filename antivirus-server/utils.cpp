@@ -32,6 +32,25 @@ Message Antivirus::generateMessage(
 	return message;
 }
 
+Message Antivirus::generateMessage(
+	char* method,
+	int8_t status,
+	Serializable* body
+) {
+	Message message;
+
+	snprintf(message.method, sizeof(message.method), "%s", method);
+
+	message.status = status;
+	message.timestamp = timeSinceEpochMillis();
+
+	ByteBuffer byteBuffer(sizeof(message.body));
+	body->write(&byteBuffer);
+	byteBuffer.getInt8(message.body, sizeof(message.body));
+
+	return message;
+}
+
 bool Antivirus::cmpstrs(char const* const target, char* current, int length) {
 	for (int i = 0; i < length; i++) {
 		if (target[i] == '\0') {
@@ -67,10 +86,6 @@ int8_t Antivirus::toInt8(std::string str) {
 	return std::stoi(str);
 }
 
-uint8_t Antivirus::toUInt8(std::string str) {
-	return static_cast<uint8_t>(std::stoul(str));
-}
-
-uint32_t Antivirus::toUInt32(std::string str) {
-	return static_cast<uint32_t>(std::stoul(str));
+int32_t Antivirus::toInt32(std::string str) {
+	return static_cast<int32_t>(std::stoul(str));
 }
