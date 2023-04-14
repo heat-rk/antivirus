@@ -12,6 +12,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialog
+import ru.heatrk.antivirus.presentation.screens.scanner.Scanner
+import ru.heatrk.antivirus.presentation.screens.scanner.ScannerIntent
+import ru.heatrk.antivirus.presentation.screens.scanner.ScannerViewState
 import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControl
 import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlIntent
 import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlViewState
@@ -26,12 +29,15 @@ fun AntivirusRootScreen(
 ) {
     val antivirusRootViewState by component.state.collectAsState()
     val serviceControlViewState by component.serviceControlComponent.state.collectAsState()
+    val scannerViewState by component.scannerComponent.state.collectAsState()
 
     AntivirusRootScreen(
         state = antivirusRootViewState,
         onIntent = component::onIntent,
         serviceControlViewState = serviceControlViewState,
-        onServiceControlIntent = component.serviceControlComponent::onIntent
+        onServiceControlIntent = component.serviceControlComponent::onIntent,
+        scannerViewState = scannerViewState,
+        onScannerIntent = component.scannerComponent::onIntent
     )
 }
 
@@ -40,7 +46,9 @@ private fun AntivirusRootScreen(
     state: AntivirusRootViewState,
     onIntent: (AntivirusRootIntent) -> Unit,
     serviceControlViewState: ServiceControlViewState,
-    onServiceControlIntent: (ServiceControlIntent) -> Unit
+    onServiceControlIntent: (ServiceControlIntent) -> Unit,
+    scannerViewState: ScannerViewState,
+    onScannerIntent: (ScannerIntent) -> Unit
 ) {
     when (state) {
         is AntivirusRootViewState.Loading -> {
@@ -52,7 +60,9 @@ private fun AntivirusRootScreen(
                 state = state,
                 onIntent = onIntent,
                 serviceControlViewState = serviceControlViewState,
-                onServiceControlIntent = onServiceControlIntent
+                onServiceControlIntent = onServiceControlIntent,
+                scannerViewState = scannerViewState,
+                onScannerIntent = onScannerIntent
             )
         }
 
@@ -82,10 +92,12 @@ private fun AntivirusRootOkScreen(
     state: AntivirusRootViewState.Ok,
     onIntent: (AntivirusRootIntent) -> Unit,
     serviceControlViewState: ServiceControlViewState,
-    onServiceControlIntent: (ServiceControlIntent) -> Unit
+    onServiceControlIntent: (ServiceControlIntent) -> Unit,
+    scannerViewState: ScannerViewState,
+    onScannerIntent: (ScannerIntent) -> Unit
 ) {
     MessageDialog(
-        dialogState = state.dialogState,
+        messageDialogState = state.messageDialogState,
         onDismiss = { onIntent(AntivirusRootIntent.DialogDismiss) }
     )
 
@@ -98,6 +110,16 @@ private fun AntivirusRootOkScreen(
         ServiceControl(
             state = serviceControlViewState,
             onIntent = onServiceControlIntent,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+        )
+
+        Spacer(modifier = Modifier.height(InsetsDimens.Default))
+
+        Scanner(
+            state = scannerViewState,
+            onIntent = onScannerIntent,
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
@@ -160,7 +182,14 @@ private fun AntivirusRootScreenPreview() {
             serviceControlViewState = ServiceControlViewState.Ok(
                 isServiceEnabled = true
             ),
-            onServiceControlIntent = {}
+            onServiceControlIntent = {},
+            scannerViewState = ScannerViewState.Running(
+                progress = 0.3f,
+                scanningPath = "D://programs/game/start.exe",
+                virusesDetected = 2,
+                isPaused = false
+            ),
+            onScannerIntent = {}
         )
     }
 }

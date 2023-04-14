@@ -8,4 +8,5 @@ interface MessagingRepository {
     suspend fun stopService(): ApiMessage<Unit>
 
     suspend fun getStatus(): Boolean
+    suspend fun getLastScan(): List<String>
 }

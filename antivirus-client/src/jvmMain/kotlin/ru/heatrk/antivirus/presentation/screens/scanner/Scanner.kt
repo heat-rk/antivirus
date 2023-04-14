@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.window.rememberWindowState
+import ru.heatrk.antivirus.presentation.dialogs.FileDialog
 import ru.heatrk.antivirus.presentation.values.dimens.ElementsDimens
 import ru.heatrk.antivirus.presentation.values.dimens.InsetsDimens
 import ru.heatrk.antivirus.presentation.values.images.Drawables
@@ -35,6 +37,13 @@ private fun ScannerVirusesDetected(
     onIntent: (ScannerIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (state.isFileDialogVisible) {
+        FileDialog { file ->
+            file?.let { onIntent(ScannerIntent.Start(file.absolutePath)) }
+            onIntent(ScannerIntent.HideFileSelectionDialog)
+        }
+    }
+
     Surface(
         shape = ApplicationTheme.shapes.medium,
         modifier = modifier
@@ -71,7 +80,7 @@ private fun ScannerVirusesDetected(
                     .wrapContentHeight()
             ) {
                 Button(
-                    onClick = { /* TODO */ }
+                    onClick = { onIntent(ScannerIntent.ShowFileSelectionDialog) }
                 ) {
                     Text(text = strings.scan)
                 }
@@ -92,11 +101,18 @@ private fun ScannerIdle(
     onIntent: (ScannerIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (state.isFileDialogVisible) {
+        FileDialog { file ->
+            file?.let { onIntent(ScannerIntent.Start(file.absolutePath)) }
+            onIntent(ScannerIntent.HideFileSelectionDialog)
+        }
+    }
+
     Surface(
         shape = ApplicationTheme.shapes.medium,
         modifier = modifier
             .clickable(enabled = state.isEnabled) {
-                // TODO
+                onIntent(ScannerIntent.ShowFileSelectionDialog)
             }
     ) {
         Column(

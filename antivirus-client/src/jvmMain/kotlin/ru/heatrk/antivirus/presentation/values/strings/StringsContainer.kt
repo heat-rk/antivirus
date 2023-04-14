@@ -33,6 +33,8 @@ interface StringsContainer {
     val resume: String
     val more: String
 
+    val selectFilesToScan: String
+
     fun errorMessage(description: String, errorCode: Int?): String
     fun scanOf(path: String): String
 

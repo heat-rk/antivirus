@@ -1,13 +1,13 @@
 package ru.heatrk.antivirus.presentation.screens.service_control
 
-import ru.heatrk.antivirus.presentation.dialogs.DialogState
+import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
 
 sealed interface ServiceControlViewState {
     object Loading : ServiceControlViewState
 
     data class Ok(
         val isServiceEnabled: Boolean,
-        val dialogState: DialogState = DialogState.Gone
+        val messageDialogState: MessageDialogState = MessageDialogState.Gone
     ) : ServiceControlViewState
 }
 

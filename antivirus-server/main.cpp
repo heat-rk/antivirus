@@ -6,9 +6,13 @@
 #include "Channel.h"
 #include "StatusNotifier.h"
 #include "MessageMethod.h"
+#include "MessageStatus.h"
 #include "ServiceManager.h"
 #include "IncomingMessageBodyScan.h"
 #include "LogWriter.h"
+#include "ScannerCache.h"
+#include "OutgoingMessageBodyScanLast.h"
+#include "Message.h"
 
 using namespace Antivirus;
 
@@ -44,7 +48,30 @@ void handleClientMessage(Message message) {
             CloseHandle(pi.hThread);
         }
     } else if (cmpstrs(MessageMethod::E_SCAN_LAST, message.method, sizeof(message.method))) {
-        
+        ScannerCache scannerCache;
+        std::vector<std::wstring> viruses;
+        scannerCache.load(&viruses);
+
+        OutgoingMessageBodyScanLast body;
+        body.virusesCount = viruses.size();
+        body.pathLengths = new int32_t[body.virusesCount];
+        body.paths = new wchar_t*[body.virusesCount];
+
+        for (int i = 0; i < viruses.size(); i++) {
+            auto virus = viruses[i];
+            body.pathLengths[i] = virus.size();
+            body.paths[i] = new wchar_t[body.pathLengths[i]];
+            wcscpy_s(body.paths[i], body.pathLengths[i], virus.c_str());
+        }
+
+        Message message = generateMessage(
+            message.method,
+            message.uuid,
+            MessageStatus::E_OK,
+            &body
+        );
+
+        channel.write(message);
     }
 }
 

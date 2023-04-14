@@ -52,6 +52,30 @@ class AntivirusApiImpl: AntivirusApi {
         return responseMessage ?: ApiMessage.Fail("Request timeout")
     }
 
+    override suspend fun getLastScan(): ApiMessage<MessageStruct> {
+        val requestMessage = MessageStruct().apply {
+            MessageMethod.SCAN_LAST.id.copyInto(this.method)
+            status = MessageStatus.REQUEST.id
+        }
+
+        withTimeoutOrNull(REQUEST_TIMEOUT) {
+            send(requestMessage)
+        }
+
+        val responseMessage = withTimeoutOrNull(RESPONSE_TIMEOUT) {
+            incomingMessages.transformWhile { message ->
+                if (message is ApiMessage.Ok && message.body.isUuidEquals(requestMessage)) {
+                    emit(message)
+                    return@transformWhile false
+                }
+
+                return@transformWhile true
+            }.first()
+        }
+
+        return responseMessage ?: ApiMessage.Fail("Request timeout")
+    }
+
     override suspend fun isServiceEnabled(): ApiMessage<Boolean> {
         val scManager = advapi32.OpenSCManager(null, null, Winsvc.SC_MANAGER_CONNECT)
             ?: return ApiMessage.Fail(

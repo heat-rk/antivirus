@@ -1,10 +1,12 @@
 package ru.heatrk.antivirus.data.repositories
 
+import com.sun.jna.Native
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import ru.heatrk.antivirus.data.api.AntivirusApi
 import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.data.models.MessageStatus
+import ru.heatrk.antivirus.data.models.structs.MessageBodyScanLastStruct
 import ru.heatrk.antivirus.data.models.structs.MessageBodyStatusStruct
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 
@@ -21,6 +23,18 @@ class MessagingRepositoryImpl(
             body.status == MessageBodyStatusStruct.OK
         } else {
             false
+        }
+    }
+
+    override suspend fun getLastScan() = withContext(ioDispatcher) {
+        val response = antivirusApi.getLastScan()
+
+        if (response is ApiMessage.Ok && response.body.status == MessageStatus.OK.id) {
+            val bodyBytes = response.body.body ?: return@withContext emptyList()
+            val body = MessageBodyScanLastStruct.create(bodyBytes)
+            body.viruses.mapNotNull { Native.toString(it) }
+        } else {
+            emptyList()
         }
     }
 

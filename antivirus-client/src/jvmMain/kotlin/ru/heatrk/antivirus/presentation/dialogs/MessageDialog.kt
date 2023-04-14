@@ -3,13 +3,11 @@
 package ru.heatrk.antivirus.presentation.dialogs
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import ru.heatrk.antivirus.presentation.values.dimens.ElementsDimens
@@ -20,31 +18,31 @@ import ru.heatrk.antivirus.presentation.values.styles.ApplicationTheme
 
 @Composable
 fun MessageDialog(
-    dialogState: DialogState,
+    messageDialogState: MessageDialogState,
     onDismiss: () -> Unit,
 ) {
-    when (dialogState) {
-        is DialogState.Error -> {
+    when (messageDialogState) {
+        is MessageDialogState.Error -> {
             MessageDialog(
-                title = dialogState.title,
+                title = messageDialogState.title,
                 titleIcon = Drawables.ErrorIcon,
                 titleTint = ApplicationTheme.colors.error,
-                message = dialogState.message,
+                message = messageDialogState.message,
                 onDismiss = onDismiss
             )
         }
 
-        is DialogState.Info -> {
+        is MessageDialogState.Info -> {
             MessageDialog(
-                title = dialogState.title,
+                title = messageDialogState.title,
                 titleIcon = Drawables.InfoIcon,
                 titleTint = ApplicationTheme.colors.primary,
-                message = dialogState.message,
+                message = messageDialogState.message,
                 onDismiss = onDismiss
             )
         }
 
-        DialogState.Gone -> Unit
+        MessageDialogState.Gone -> Unit
     }
 }
 
@@ -99,7 +97,7 @@ fun MessageDialog(
 fun MessageDialogPreview() {
     ApplicationTheme {
         MessageDialog(
-            dialogState = DialogState.Error(
+            messageDialogState = MessageDialogState.Error(
                 title = "Ошибка!",
                 message = "Что-то пошло не так!"
             ),

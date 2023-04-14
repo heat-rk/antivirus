@@ -45,7 +45,7 @@ private fun ServiceControlOk(
     modifier: Modifier
 ) {
     MessageDialog(
-        dialogState = state.dialogState,
+        messageDialogState = state.messageDialogState,
         onDismiss = { onIntent(ServiceControlIntent.DialogDismiss) }
     )
 

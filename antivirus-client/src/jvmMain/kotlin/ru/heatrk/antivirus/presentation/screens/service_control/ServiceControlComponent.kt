@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import ru.heatrk.antivirus.presentation.common.Component
-import ru.heatrk.antivirus.presentation.dialogs.DialogState
+import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
 import ru.heatrk.antivirus.presentation.screens.ServiceStatusListener
 import ru.heatrk.antivirus.presentation.values.strings.strings
 
@@ -41,7 +41,7 @@ class ServiceControlComponent(
                 }
 
                 _state.value = state.copy(
-                    dialogState = DialogState.Info(
+                    messageDialogState = MessageDialogState.Info(
                         title = strings.info,
                         message = strings.serviceStatusInfoDialogMessage
                     )
@@ -55,7 +55,7 @@ class ServiceControlComponent(
                     return@launch
                 }
 
-                _state.value = state.copy(dialogState = DialogState.Gone)
+                _state.value = state.copy(messageDialogState = MessageDialogState.Gone)
             }
         }
     }

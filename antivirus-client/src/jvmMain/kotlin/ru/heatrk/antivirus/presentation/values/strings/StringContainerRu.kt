@@ -28,6 +28,8 @@ object StringContainerRu: StringsContainer {
     override val resume = "Продолжить"
     override val more = "Подробнее"
 
+    override val selectFilesToScan = "Выберите файлы для сканирования"
+
     override fun errorMessage(description: String, errorCode: Int?) =
         buildString {
             append("Что-то пошло не так. Ошибка: $description")

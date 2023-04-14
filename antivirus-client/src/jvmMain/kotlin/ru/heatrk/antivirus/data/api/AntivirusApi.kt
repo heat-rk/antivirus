@@ -9,6 +9,7 @@ interface AntivirusApi {
     suspend fun stopService(): ApiMessage<Unit>
 
     suspend fun getStatus(): ApiMessage<MessageStruct>
+    suspend fun getLastScan(): ApiMessage<MessageStruct>
 
     sealed interface ScanState {
         object Idle : ScanState

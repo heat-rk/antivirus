@@ -1,7 +1,10 @@
 package ru.heatrk.antivirus.presentation.screens.scanner
 
 sealed interface ScannerViewState {
-    data class Idle(val isEnabled: Boolean) : ScannerViewState
+    data class Idle(
+        val isEnabled: Boolean,
+        val isFileDialogVisible: Boolean = false
+    ) : ScannerViewState
 
     data class Running(
         val progress: Float,
@@ -11,7 +14,8 @@ sealed interface ScannerViewState {
     ) : ScannerViewState
 
     data class VirusesDetected(
-        val virusesDetected: Int
+        val virusesDetected: Int,
+        val isFileDialogVisible: Boolean = false
     ) : ScannerViewState
 }
 
@@ -21,4 +25,6 @@ sealed interface ScannerIntent {
     object Resume : ScannerIntent
     object Stop : ScannerIntent
     object More : ScannerIntent
+    object ShowFileSelectionDialog : ScannerIntent
+    object HideFileSelectionDialog : ScannerIntent
 }
