@@ -111,7 +111,9 @@ void Channel::write(Message message) {
     }
 
     if (WriteFile(m_outputPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
-        LogWriter::log(L"Write failed, GLE=%d.\n", GetLastError());
+        if (GetLastError() != ERROR_PIPE_LISTENING) {
+            LogWriter::log(L"Write failed, GLE=%d.\n", GetLastError());
+        }
         return;
     }
 
