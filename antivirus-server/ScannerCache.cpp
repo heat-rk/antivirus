@@ -1,6 +1,7 @@
 #include "ScannerCache.h"
 #include "AppDataProvider.h"
 #include "ByteBuffer.h"
+#include "LogWriter.h"
 
 #include <fstream>
 #include <Windows.h>
@@ -12,22 +13,22 @@
 using namespace Antivirus;
 
 void ScannerCache::save(std::vector<std::wstring> viruses) {
-    /*wchar_t* appdataPath;
+    wchar_t* appdataPath;
     appdataDirectory(&appdataPath);
     wcscat_s(appdataPath, MAX_PATH, SCANNER_DATA_FILE_NAME);
 
-    fstream scannerDataFile;
+    std::fstream scannerDataFile;
     scannerDataFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
     try {
-        scannerDataFile.open(appdataPath, ios::out | ios::binary);
+        scannerDataFile.open(appdataPath, std::ios::out | std::ios::binary);
     } catch (std::system_error& e) {
-        printf("%s\n", e.code().message().c_str());
+        LogWriter::log("%s\n", e.code().message().c_str());
     }
 
     if (!scannerDataFile.is_open()) {
         char message[] = "Scanner: Scanner cache file can't be opened\n";
-        printf(message);
+        LogWriter::log(message);
         return;
     }
 
@@ -51,7 +52,7 @@ void ScannerCache::save(std::vector<std::wstring> viruses) {
 
     CoTaskMemFree(appdataPath);
     scannerDataFile.close();
-    delete bytes;*/
+    delete bytes;
 }
 
 void ScannerCache::load(std::vector<std::wstring>* dest) {

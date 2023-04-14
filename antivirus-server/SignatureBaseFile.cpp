@@ -1,6 +1,7 @@
 #include "SignatureBaseFile.h"
 #include "ByteBuffer.h"
 #include "Utils.h"
+#include "LogWriter.h"
 
 using namespace Antivirus;
 
@@ -34,7 +35,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 		try {
 			m_file.open(filename, std::ios::out | std::ios::binary);
 		} catch (std::system_error& e) {
-			printf("%s\n", e.code().message().c_str());
+			LogWriter::log("%s\n", e.code().message().c_str());
 		}
 
 		if (!m_file.is_open()) {

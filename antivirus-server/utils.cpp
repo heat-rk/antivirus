@@ -82,14 +82,6 @@ bool Antivirus::cmpstrs(char const* const target, char* current, int length) {
 	return true;
 }
 
-void Antivirus::printBytes(int8_t* bytes, int length) {
-	for (int i = 0; i < length; i++) {
-		printf("%d ", bytes[i]);
-	}
-
-	printf("\n");
-}
-
 bool Antivirus::isFileExist(wchar_t* filename) {
 	int size_needed = WideCharToMultiByte(CP_UTF8, 0, filename, -1, NULL, 0, NULL, NULL);
 	char* str = new char[size_needed]; 

@@ -14,6 +14,7 @@
 #include "AppDataProvider.h"
 #include "VirusRecord.h"
 #include "LogReader.h"
+#include "LogWriter.h"
 
 using namespace Antivirus;
 
@@ -23,7 +24,7 @@ int ServiceManager::installService() {
 	SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
 
 	if (!hSCManager) {
-		printf("Can't open Service Control Manager: %d\n", GetLastError());
+        LogWriter::log("Can't open Service Control Manager: %d\n", GetLastError());
 		return -1;
 	}
 
@@ -40,7 +41,7 @@ int ServiceManager::installService() {
 	);
 
 	if (!hService) {
-		printf("Can't create service: %d\n", GetLastError());
+        LogWriter::log("Can't create service: %d\n", GetLastError());
 		CloseServiceHandle(hSCManager);
 		return -1;
 	}
@@ -48,7 +49,7 @@ int ServiceManager::installService() {
 	CloseServiceHandle(hService);
 	CloseServiceHandle(hSCManager);
 
-	printf("Success install service!\n");
+    LogWriter::log("Success install service!\n");
 
     return 0;
 }
@@ -61,7 +62,7 @@ int ServiceManager::uninstallService() {
 	SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 
 	if (!hSCManager) {
-		printf("Can't open Service Control Manager: %d\n", GetLastError());
+        LogWriter::log("Can't open Service Control Manager: %d\n", GetLastError());
 		return -1;
 	}
 
@@ -72,7 +73,7 @@ int ServiceManager::uninstallService() {
 	);
 
 	if (!hService) {
-		printf("Can't remove service: %d\n", GetLastError());
+        LogWriter::log("Can't remove service: %d\n", GetLastError());
 		CloseServiceHandle(hSCManager);
 		return -1;
 	}
@@ -81,7 +82,7 @@ int ServiceManager::uninstallService() {
 	CloseServiceHandle(hService);
 	CloseServiceHandle(hSCManager);
 
-	printf("Success remove service!\n");
+    LogWriter::log("Success remove service!\n");
 
     return 0;
 }
@@ -102,7 +103,7 @@ int ServiceManager::runService() {
     );  
 
     if (NULL == schSCManager) {
-        printf("OpenSCManager failed (%d)\n", GetLastError());
+        LogWriter::log("OpenSCManager failed (%d)\n", GetLastError());
         return -1;
     }
 
@@ -115,7 +116,7 @@ int ServiceManager::runService() {
     );
 
     if (schService == NULL) {
-        printf("OpenService failed (%d)\n", GetLastError());
+        LogWriter::log("OpenService failed (%d)\n", GetLastError());
         CloseServiceHandle(schSCManager);
         return -1;
     }
@@ -129,7 +130,7 @@ int ServiceManager::runService() {
         sizeof(SERVICE_STATUS_PROCESS), // size of structure
         &dwBytesNeeded)
     ) {
-        printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+        LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
@@ -139,7 +140,7 @@ int ServiceManager::runService() {
     // to stop the service here, but for simplicity this example just returns. 
 
     if (ssStatus.dwCurrentState != SERVICE_STOPPED && ssStatus.dwCurrentState != SERVICE_STOP_PENDING) {
-        printf("Cannot start the service because it is already running\n");
+        LogWriter::log("Cannot start the service because it is already running\n");
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return 0;
@@ -175,7 +176,7 @@ int ServiceManager::runService() {
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded)
         ) {
-            printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
@@ -187,7 +188,7 @@ int ServiceManager::runService() {
             dwOldCheckPoint = ssStatus.dwCheckPoint;
         } else {
             if (GetTickCount() - dwStartTickCount > ssStatus.dwWaitHint) {
-                printf("Timeout waiting for service to stop\n");
+                LogWriter::log("Timeout waiting for service to stop\n");
                 CloseServiceHandle(schService);
                 CloseServiceHandle(schSCManager);
                 return -1;
@@ -201,13 +202,13 @@ int ServiceManager::runService() {
         0,           // number of arguments 
         NULL)
     ) {
-        printf("StartService failed (%d)\n", GetLastError());
+        LogWriter::log("StartService failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
     }
     else {
-        printf("Service start pending...\n");
+        LogWriter::log("Service start pending...\n");
     }
 
     // Check the status until the service is no longer start pending. 
@@ -219,7 +220,7 @@ int ServiceManager::runService() {
         sizeof(SERVICE_STATUS_PROCESS), // size of structure
         &dwBytesNeeded)
     ) {
-        printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+        LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
@@ -253,7 +254,7 @@ int ServiceManager::runService() {
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded)
         ) {
-            printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
             break;
         }
 
@@ -272,13 +273,13 @@ int ServiceManager::runService() {
     // Determine whether the service is running.
 
     if (ssStatus.dwCurrentState == SERVICE_RUNNING) {
-        printf("Service started successfully.\n");
+        LogWriter::log("Service started successfully.\n");
     } else {
-        printf("Service not started. \n");
-        printf("  Current State: %d\n", ssStatus.dwCurrentState);
-        printf("  Exit Code: %d\n", ssStatus.dwWin32ExitCode);
-        printf("  Check Point: %d\n", ssStatus.dwCheckPoint);
-        printf("  Wait Hint: %d\n", ssStatus.dwWaitHint);
+        LogWriter::log("Service not started. \n");
+        LogWriter::log("  Current State: %d\n", ssStatus.dwCurrentState);
+        LogWriter::log("  Exit Code: %d\n", ssStatus.dwWin32ExitCode);
+        LogWriter::log("  Check Point: %d\n", ssStatus.dwCheckPoint);
+        LogWriter::log("  Wait Hint: %d\n", ssStatus.dwWaitHint);
     }
 
     CloseServiceHandle(schService);
@@ -303,7 +304,7 @@ int ServiceManager::stopService() {
     );
 
     if (NULL == schSCManager) {
-        printf("OpenSCManager failed (%d)\n", GetLastError());
+        LogWriter::log("OpenSCManager failed (%d)\n", GetLastError());
         return -1;
     }
 
@@ -317,7 +318,7 @@ int ServiceManager::stopService() {
     );
 
     if (schService == NULL) {
-        printf("OpenService failed (%d)\n", GetLastError());
+        LogWriter::log("OpenService failed (%d)\n", GetLastError());
         CloseServiceHandle(schSCManager);
         return -1;
     }
@@ -331,14 +332,14 @@ int ServiceManager::stopService() {
         sizeof(SERVICE_STATUS_PROCESS),
         &dwBytesNeeded)
     ) {
-        printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+        LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
     }
 
     if (ssp.dwCurrentState == SERVICE_STOPPED) {
-        printf("Service is already stopped.\n");
+        LogWriter::log("Service is already stopped.\n");
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return 0;
@@ -347,7 +348,7 @@ int ServiceManager::stopService() {
     // If a stop is pending, wait for it.
 
     while (ssp.dwCurrentState == SERVICE_STOP_PENDING) {
-        printf("Service stop pending...\n");
+        LogWriter::log("Service stop pending...\n");
 
         // Do not wait longer than the wait hint. A good interval is 
         // one-tenth of the wait hint but not less than 1 second  
@@ -369,21 +370,21 @@ int ServiceManager::stopService() {
             sizeof(SERVICE_STATUS_PROCESS),
             &dwBytesNeeded)
         ) {
-            printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
         }
 
         if (ssp.dwCurrentState == SERVICE_STOPPED) {
-            printf("Service stopped successfully.\n");
+            LogWriter::log("Service stopped successfully.\n");
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
         }
 
         if (GetTickCount() - dwStartTime > dwTimeout) {
-            printf("Service stop timed out.\n");
+            LogWriter::log("Service stop timed out.\n");
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
@@ -397,7 +398,7 @@ int ServiceManager::stopService() {
         SERVICE_CONTROL_STOP,
         (LPSERVICE_STATUS)&ssp)
     ) {
-        printf("ControlService failed (%d)\n", GetLastError());
+        LogWriter::log("ControlService failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
@@ -415,7 +416,7 @@ int ServiceManager::stopService() {
             sizeof(SERVICE_STATUS_PROCESS),
             &dwBytesNeeded)
         ) {
-            printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
@@ -425,14 +426,14 @@ int ServiceManager::stopService() {
             break;
 
         if (GetTickCount() - dwStartTime > dwTimeout) {
-            printf("Wait timed out\n");
+            LogWriter::log("Wait timed out\n");
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
         }
     }
 
-    printf("Service stopped successfully\n");
+    LogWriter::log("Service stopped successfully\n");
 
     return 0;
 }
@@ -445,7 +446,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     
     if (!CreateDirectory(appdataPath, NULL) &&
         ERROR_ALREADY_EXISTS != GetLastError()) {
-        printf("Error creating app data directory (GLE = %d)\n", GetLastError());
+        LogWriter::log("Error creating app data directory (GLE = %d)\n", GetLastError());
         return 1;
     }
 

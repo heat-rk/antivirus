@@ -8,6 +8,7 @@
 #include "MessageMethod.h"
 #include "ServiceManager.h"
 #include "IncomingMessageBodyScan.h"
+#include "LogWriter.h"
 
 using namespace Antivirus;
 
@@ -139,7 +140,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
         g_ServiceStatus.dwCheckPoint = 1;
 
         if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-            OutputDebugString(TEXT("My Sample Service: ServiceMain: SetServiceStatus returned error"));
+            OutputDebugString(TEXT("AntivirusService: ServiceMain: SetServiceStatus returned error"));
         }
 
         return;
@@ -178,7 +179,7 @@ int wmain(int argc, wchar_t* argv[]) {
         };
 
         if (StartServiceCtrlDispatcher(ServiceTable) == FALSE) {
-            printf("Service constructor failed with code %d.\n", GetLastError());
+            LogWriter::log("Service constructor failed with code %d.\n", GetLastError());
             init();
             HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
             WaitForSingleObject(hThread, INFINITE);

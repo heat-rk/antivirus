@@ -6,6 +6,7 @@
 #include "MessageMethod.h"
 #include "MessageStatus.h"
 #include "ByteBuffer.h"
+#include "LogWriter.h"
 
 #include <stdio.h>
 #include <filesystem>
@@ -59,7 +60,7 @@ Scanner::Scanner() {
     );
 
     if (m_scannerThread == NULL) {
-        printf("Client thread creation failed, GLE=%d.\n", GetLastError());
+        LogWriter::log("Client thread creation failed, GLE=%d.\n", GetLastError());
         return;
     }
 }
@@ -94,7 +95,7 @@ void Scanner::start(wchar_t* path) {
 
         m_channel.write(response);
 
-        printf(message);
+        LogWriter::log(message);
 
         return;
     }
@@ -102,14 +103,14 @@ void Scanner::start(wchar_t* path) {
     m_isScanning = true;
     m_isActive = true;
 
-    printf("Finding entries...\n");
+    LogWriter::log("Finding entries...\n");
 
     bool infected;
     std::vector<std::wstring> entries;
     std::vector<std::wstring> viruses;
     findEntries(path, &entries);
 
-    printf("Entries count = %d\n", entries.size());
+    LogWriter::log("Entries count = %d\n", entries.size());
 
     for (int i = 0; i < entries.size(); i++) {
         if (!m_isActive) {
@@ -122,7 +123,7 @@ void Scanner::start(wchar_t* path) {
 
         const wchar_t* entry = entries[i].c_str();
 
-        wprintf(L"Scanning of %ls ...\n", entry);
+        LogWriter::log(L"Scanning of %ls ...\n", entry);
 
         std::ifstream* file = new std::ifstream;
         file->open(entry, std::ios::binary);
@@ -139,11 +140,11 @@ void Scanner::start(wchar_t* path) {
         if (infected) {
             body.infected = 1;
             viruses.push_back(entries[i]);
-            wprintf(L"%ls - Infected!\n", entry);
+            LogWriter::log(L"%ls - Infected!\n", entry);
         }
         else {
             body.infected = 0;
-            wprintf(L"%ls - Ok\n", entry);
+            LogWriter::log(L"%ls - Ok\n", entry);
         }
 
         Message response = generateMessage(
@@ -196,7 +197,7 @@ bool Scanner::scan(std::ifstream* file) {
 
         m_channel.write(response);
 
-        printf(message);
+        LogWriter::log(message);
 
         return false;
     }
@@ -282,7 +283,7 @@ void Scanner::findEntries(std::wstring path, std::vector<std::wstring>* entries)
 
         m_channel.write(response);
 
-        printf(message);
+        LogWriter::log(message);
         return;
     }
 
@@ -305,7 +306,7 @@ void Scanner::findEntries(std::wstring path, std::vector<std::wstring>* entries)
 
         m_channel.write(response);
 
-        printf(message);
+        LogWriter::log(message);
         return;
     }
 }

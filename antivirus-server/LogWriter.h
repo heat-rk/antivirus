@@ -11,6 +11,7 @@ namespace Antivirus {
 		static void openPipe();
 	public:
 		static void log(const wchar_t* format, ...);
+		static void log(const char* format, ...);
 		static void log(int8_t* bytes, int32_t size);
 	};
 }

@@ -25,6 +25,23 @@ void LogWriter::log(const wchar_t* format, ...) {
     va_end(args);
 }
 
+void LogWriter::log(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    char message[PIPE_LOG_BUFFSIZE];
+    vsprintf_s(message, PIPE_LOG_BUFFSIZE, format, args);
+
+    openPipe();
+    printf(message);
+
+    if (WriteFile(m_pipe, message, PIPE_LOG_BUFFSIZE, NULL, NULL) != TRUE) {
+        wprintf(L"[LogWriter] Write failed, GLE=%d.\n", GetLastError());
+    }
+
+    va_end(args);
+}
+
 void LogWriter::log(int8_t* bytes, int32_t size) {
     openPipe();
 
