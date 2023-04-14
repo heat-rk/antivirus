@@ -25,9 +25,11 @@ Message Antivirus::generateMessage(
 	message.status = status;
 	message.timestamp = timeSinceEpochMillis();
 
-	ByteBuffer byteBuffer(sizeof(message.body));
+	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	byteBuffer.getInt8(message.body, sizeof(message.body));
+	message.bodySize = byteBuffer.size();
+	message.body = new int8_t[message.bodySize];
+	byteBuffer.getInt8(message.body, byteBuffer.size());
 
 	return message;
 }
@@ -44,9 +46,25 @@ Message Antivirus::generateMessage(
 	message.status = status;
 	message.timestamp = timeSinceEpochMillis();
 
-	ByteBuffer byteBuffer(sizeof(message.body));
+	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	byteBuffer.getInt8(message.body, sizeof(message.body));
+	message.bodySize = byteBuffer.size();
+	message.body = new int8_t[message.bodySize];
+	byteBuffer.getInt8(message.body, byteBuffer.size());
+
+	return message;
+}
+
+Message Antivirus::generateMessage(
+	char* method,
+	int8_t status
+) {
+	Message message;
+
+	snprintf(message.method, sizeof(message.method), "%s", method);
+
+	message.status = status;
+	message.timestamp = timeSinceEpochMillis();
 
 	return message;
 }

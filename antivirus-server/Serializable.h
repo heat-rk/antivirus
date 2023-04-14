@@ -15,12 +15,19 @@ namespace Antivirus {
 
 		template<class T> class Deserializer {
 		public:
-			virtual T createFromBytes(int8_t* bytes, uint32_t length) const final {
+			virtual T createFromBytes(
+				int8_t* bytes,
+				uint32_t length,
+				int8_t** bytesWritten = NULL,
+				uint32_t* bytesWrittenLength = NULL
+			) const final {
 				ByteBuffer byteBuffer(bytes, length);
-				return create(byteBuffer);
+				T entity = create(&byteBuffer);
+				byteBuffer.readedBytes(bytesWritten, bytesWrittenLength);
+				return entity;
 			}
 
-			virtual T create(ByteBuffer byteBuffer) const = 0;
+			virtual T create(ByteBuffer* byteBuffer) const = 0;
 		};
 	};
 }

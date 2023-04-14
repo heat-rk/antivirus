@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include "MessageMethod.h"
 #include "MessageStatus.h"
+#include "ByteBuffer.h"
 
 using namespace Antivirus;
 using namespace std;
@@ -15,25 +16,39 @@ using namespace std;
 DWORD WINAPI scannerThreadHandler(LPVOID lpvParam) {
     Scanner::ThreadParams* params = reinterpret_cast<Scanner::ThreadParams*>(lpvParam);
 
-	for (;;) {
-        if (!params->isScanning() || params->queue->empty()) {
-            Sleep(1000);
-            continue;
+    params->channel->listen([params](Message message) {
+        if (cmpstrs(MessageMethod::E_SCAN_PAUSE, message.method, sizeof(message.method))) {
+            params->scanner->pause();
+            params->channel->write(
+                generateMessage(
+                    (char*)MessageMethod::E_SCAN_PAUSE,
+                    MessageStatus::E_OK
+                )
+            );
         }
+        else if (cmpstrs(MessageMethod::E_SCAN_STOP, message.method, sizeof(message.method))) {
+            params->scanner->stop();
+            params->channel->write(
+                generateMessage(
+                    (char*)MessageMethod::E_SCAN_STOP,
+                    MessageStatus::E_OK
+                )
+            );
+        }
+    });
 
-        params->queue->back()();
-        params->queue->pop_back();
-	}
+    return ERROR_SUCCESS;
 }
 
 Scanner::Scanner() {
-	m_scannerThread = INVALID_HANDLE_VALUE;
+    m_isActive = true;
     m_isScanning = false;
-    m_outgoingMessagesHandler = [](Message) {};
+
+    m_channel.init();
 
     m_threadParams = new ThreadParams;
-    m_threadParams->isScanning = [this] { return isScanning(); };
-    m_threadParams->queue = &m_scanQueue;
+    m_threadParams->channel = &m_channel;
+    m_threadParams->scanner = this;
 
     m_scannerThread = CreateThread(
         NULL,
@@ -64,14 +79,6 @@ void Scanner::addRecord(VirusRecord record) {
     m_records[record.signature.first].push_back(record);
 }
 
-void Scanner::handleIncomingMessage(Message message) {
-
-}
-
-void Scanner::setOutgoingMessagesHandler(std::function<void(Message)> onMessage) {
-    m_outgoingMessagesHandler = onMessage;
-}
-
 void Scanner::start(wchar_t* path) {
     if (m_isScanning) {
         char message[] = "Scanner: Scanner is already running\n";
@@ -81,12 +88,12 @@ void Scanner::start(wchar_t* path) {
         copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
-            (char*) MessageMethod::E_SCAN,
+            (char*) MessageMethod::E_SCAN_START,
             MessageStatus::E_ERROR,
             &body
         );
 
-        m_outgoingMessagesHandler(response);
+        m_channel.write(response);
 
         printf(message);
 
@@ -94,54 +101,67 @@ void Scanner::start(wchar_t* path) {
     }
 
     m_isScanning = true;
+    m_isActive = true;
 
     printf("Finding entries...\n");
 
     bool infected;
     vector<wstring> entries;
+    vector<wstring> viruses;
     findEntries(path, &entries);
 
     printf("Entries count = %d\n", entries.size());
 
     for (int i = 0; i < entries.size(); i++) {
+        if (!m_isActive) {
+            return;
+        }
+
+        while (!m_isScanning) {
+            Sleep(1000);
+        }
+
         const wchar_t* entry = entries[i].c_str();
 
-        addToScanQueue([this, entry, i, entries] {
-            wprintf(L"Scanning of %ls ...\n", entry);
+        wprintf(L"Scanning of %ls ...\n", entry);
 
-            ifstream* file = new ifstream;
-            file->open(entry, ios::binary);
-            bool infected = scan(file);
+        ifstream* file = new ifstream;
+        file->open(entry, ios::binary);
+        infected = scan(file);
 
-            OutgoingMessageBodyScan body;
+        OutgoingMessageBodyScan body;
 
-            body.progress = i;
-            body.total = entries.size();
-            body.pathLength = wcslen(entry);
-            body.path = new wchar_t[body.pathLength];
-            copy(entry, entry + body.pathLength, body.path);
+        body.progress = i;
+        body.total = entries.size();
+        body.pathLength = wcslen(entry);
+        body.path = new wchar_t[body.pathLength];
+        copy(entry, entry + body.pathLength, body.path);
 
-            Message response = generateMessage(
-                (char*) MessageMethod::E_SCAN,
-                MessageStatus::E_OK,
-                &body
-            );
+        if (infected) {
+            body.infected = 1;
+            viruses.push_back(entries[i]);
+            wprintf(L"%ls - Infected!\n", entry);
+        }
+        else {
+            body.infected = 0;
+            wprintf(L"%ls - Ok\n", entry);
+        }
 
-            if (infected) {
-                body.infected = 1;
-                wprintf(L"%ls - Infected!\n", entry);
-            } else {
-                body.infected = 0;
-                wprintf(L"%ls - Ok\n", entry);
-            }
+        Message response = generateMessage(
+            (char*)MessageMethod::E_SCAN_START,
+            MessageStatus::E_OK,
+            &body
+        );
 
-            m_outgoingMessagesHandler(response);
+        m_channel.write(response);
 
-            delete file;
-        });
+        delete file;
     }
 
-    waitForScannerThread();
+    m_isScanning = false;
+    m_isActive = false;
+
+    m_cache.save(viruses);
 }
 
 void Scanner::pause() {
@@ -154,11 +174,7 @@ void Scanner::resume() {
 
 void Scanner::stop() {
     m_isScanning = false;
-    m_scanQueue.clear();
-}
-
-void Scanner::waitForScannerThread() {
-    WaitForSingleObject(m_scannerThread, INFINITE);
+    m_isActive = false;
 }
 
 bool Scanner::isScanning() {
@@ -174,15 +190,15 @@ bool Scanner::scan(ifstream* file) {
         copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
-            (char*) MessageMethod::E_SCAN,
+            (char*)MessageMethod::E_SCAN_START,
             MessageStatus::E_ERROR,
             &body
         );
 
-        m_outgoingMessagesHandler(response);
+        m_channel.write(response);
 
         printf(message);
-        
+
         return false;
     }
 
@@ -193,7 +209,7 @@ bool Scanner::scan(ifstream* file) {
     char* bytes = new char[length];
     file->read(bytes, length);
 
-    bool result = scan((int8_t*) bytes, length);
+    bool result = scan((int8_t*)bytes, length);
 
     delete bytes;
     return result;
@@ -229,7 +245,7 @@ bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset) {
         }
 
         m_sha256.update(bytes + offset, record.signature.length);
-        hash = (int8_t*) m_sha256.digest();
+        hash = (int8_t*)m_sha256.digest();
 
         for (int j = 0; j < HASH_SIZE; j++) {
             if (record.signature.hash[j] != hash[j]) {
@@ -260,12 +276,12 @@ void Scanner::findEntries(wstring path, vector<wstring>* entries) {
         copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
-            (char*) MessageMethod::E_SCAN,
+            (char*)MessageMethod::E_SCAN_START,
             MessageStatus::E_ERROR,
             &body
         );
 
-        m_outgoingMessagesHandler(response);
+        m_channel.write(response);
 
         printf(message);
         return;
@@ -283,18 +299,14 @@ void Scanner::findEntries(wstring path, vector<wstring>* entries) {
         copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
-            (char*) MessageMethod::E_SCAN,
+            (char*)MessageMethod::E_SCAN_START,
             MessageStatus::E_ERROR,
             &body
         );
 
-        m_outgoingMessagesHandler(response);
+        m_channel.write(response);
 
         printf(message);
         return;
     }
-}
-
-void Scanner::addToScanQueue(function<void()> task) {
-    m_scanQueue.insert(m_scanQueue.begin(), task);
 }

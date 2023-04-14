@@ -185,9 +185,12 @@
   <ItemGroup>
     <ClCompile Include="AppDataProvider.cpp" />
     <ClCompile Include="ByteBuffer.cpp" />
+    <ClCompile Include="LogWriter.cpp" />
+    <ClCompile Include="LogReader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Channel.cpp" />
     <ClCompile Include="Scanner.cpp" />
+    <ClCompile Include="ScannerCache.cpp" />
     <ClCompile Include="ServiceManager.cpp" />
     <ClCompile Include="Sha256.cpp" />
     <ClCompile Include="SignatureBaseFile.cpp" />
@@ -198,12 +201,18 @@
     <ClInclude Include="AppDataProvider.h" />
     <ClInclude Include="ByteBuffer.h" />
     <ClInclude Include="Channel.h" />
+    <ClInclude Include="IncomingMessageBodyScan.h" />
+    <ClInclude Include="LogConstants.h" />
+    <ClInclude Include="LogWriter.h" />
+    <ClInclude Include="LogReader.h" />
     <ClInclude Include="OutgoingMessageBodyError.h" />
     <ClInclude Include="MessageStatus.h" />
     <ClInclude Include="MessageMethod.h" />
     <ClInclude Include="OutgoingMessageBodyScan.h" />
+    <ClInclude Include="OutgoingMessageBodyScanLast.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="OutgoingMessageBodyStatus.h" />
+    <ClInclude Include="ScannerCache.h" />
     <ClInclude Include="Serializable.h" />
     <ClInclude Include="ServiceManager.h" />
     <ClInclude Include="Sha256.h" />
@@ -214,9 +223,6 @@
     <ClInclude Include="VirusFileTypes.h" />
     <ClInclude Include="VirusRecord.h" />
     <ClInclude Include="VirusSignature.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="antivirus-base" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

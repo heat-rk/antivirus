@@ -13,6 +13,7 @@
 #include "Scanner.h"
 #include "AppDataProvider.h"
 #include "VirusRecord.h"
+#include "LogReader.h"
 
 using namespace Antivirus;
 using namespace std;
@@ -27,8 +28,6 @@ int ServiceManager::installService() {
 		return -1;
 	}
 
-	LPWSTR servicePath = reinterpret_cast<LPWSTR>(const_cast<char16_t*>(m_serviceBinaryPath));
-
 	SC_HANDLE hService = CreateService(
 		hSCManager,
 		m_SERVICE_NAME,
@@ -37,7 +36,7 @@ int ServiceManager::installService() {
 		SERVICE_WIN32_OWN_PROCESS,
 		SERVICE_AUTO_START,
 		SERVICE_ERROR_NORMAL,
-		servicePath,
+        m_serviceBinaryPath,
 		NULL, NULL, NULL, NULL, NULL
 	);
 
@@ -536,5 +535,10 @@ int ServiceManager::scan(wchar_t* path) {
 
     CoTaskMemFree(appdataPath);
 
+    return 0;
+}
+
+int ServiceManager::logs() {
+    LogReader::connect();
     return 0;
 }

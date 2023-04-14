@@ -14,9 +14,9 @@ namespace Antivirus {
 	public:
 		class Deserializer : public Serializable::Deserializer<OutgoingMessageBodyStatus> {
 		public:
-			virtual OutgoingMessageBodyStatus create(ByteBuffer byteBuffer) const override {
+			virtual OutgoingMessageBodyStatus create(ByteBuffer* byteBuffer) const override {
 				OutgoingMessageBodyStatus body;
-				body.status = byteBuffer.getInt8();
+				body.status = byteBuffer->getInt8();
 				return body;
 			}
 		};

@@ -24,5 +24,17 @@ interface StringsContainer {
 
     val serviceStatusInfoDialogMessage: String
 
+    val scanUnavailable: String
+    val scan: String
+    val clickToScan: String
+    val pause: String
+    val paused: String
+    val stop: String
+    val resume: String
+    val more: String
+
     fun errorMessage(description: String, errorCode: Int?): String
+    fun scanOf(path: String): String
+
+    fun virusesDetected(count: Int): String
 }

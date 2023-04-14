@@ -11,12 +11,12 @@ namespace Antivirus {
 	public:
 		class Deserializer : public Serializable::Deserializer<VirusSignature> {
 		public:
-			virtual VirusSignature create(ByteBuffer byteBuffer) const override {
+			virtual VirusSignature create(ByteBuffer* byteBuffer) const override {
 				VirusSignature signature;
-				signature.offset = byteBuffer.getInt32();
-				signature.length = byteBuffer.getInt32();
-				signature.first = byteBuffer.getInt64();
-				byteBuffer.getInt8(signature.hash, sizeof(signature.hash));
+				signature.offset = byteBuffer->getInt32();
+				signature.length = byteBuffer->getInt32();
+				signature.first = byteBuffer->getInt64();
+				byteBuffer->getInt8(signature.hash, sizeof(signature.hash));
 				return signature;
 			}
 		};

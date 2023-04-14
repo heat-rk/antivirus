@@ -22,6 +22,7 @@ namespace Antivirus {
 		void clear(); 
 		void resize(uint32_t newSize);
 		uint32_t size();
+		void readedBytes(int8_t** bytes, uint32_t* length);
 
 		int8_t getInt8() const;
 		void getInt8(int8_t* buffer, uint32_t length) const;

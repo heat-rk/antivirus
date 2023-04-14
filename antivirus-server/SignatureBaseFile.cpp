@@ -168,7 +168,7 @@ bool SignatureBaseFileReader::readRecord(VirusRecord* record) {
 	record->name = new char[record->nameLength];
 	byteBuffer.getChars(record->name, record->nameLength);
 	record->type = byteBuffer.getInt8();
-	record->signature = virusSignatureDeserializer.create(byteBuffer);
+	record->signature = virusSignatureDeserializer.create(&byteBuffer);
 
 	delete bytes;
 

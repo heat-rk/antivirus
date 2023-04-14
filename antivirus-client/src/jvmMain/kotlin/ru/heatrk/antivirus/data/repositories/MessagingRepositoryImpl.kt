@@ -16,7 +16,8 @@ class MessagingRepositoryImpl(
         val response = antivirusApi.getStatus()
 
         if (response is ApiMessage.Ok && response.body.status == MessageStatus.OK.id) {
-            val body = MessageBodyStatusStruct.create(response.body.body)
+            val bodyBytes = response.body.body ?: return@withContext false
+            val body = MessageBodyStatusStruct.create(bodyBytes)
             body.status == MessageBodyStatusStruct.OK
         } else {
             false

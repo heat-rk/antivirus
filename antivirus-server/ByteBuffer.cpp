@@ -27,12 +27,21 @@ void ByteBuffer::clear() {
 
 void ByteBuffer::resize(uint32_t newSize) {
 	m_buf.resize(newSize);
-	m_rpos = 0;
-	m_wpos = 0;
 }
 
 uint32_t ByteBuffer::size() {
 	return m_buf.size();
+}
+
+void ByteBuffer::readedBytes(int8_t** bytes, uint32_t* length) {
+	int8_t* buffBytes = new int8_t[m_rpos];
+	
+	for (int i = 0; i < m_rpos; i++) {
+		buffBytes[i] = m_buf[i];
+	}
+
+	*bytes = buffBytes;
+	*length = m_rpos;
 }
 
 void ByteBuffer::getInt8(int8_t* buffer, uint32_t length) const {

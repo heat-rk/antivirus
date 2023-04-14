@@ -1,19 +1,21 @@
 #include "Channel.h"
 #include "Utils.h"
+#include "ByteBuffer.h"
+#include "LogWriter.h"
 
 using namespace std;
 using namespace Antivirus;
 
 #define PIPE_SERVICE_INPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-input"
 #define PIPE_SERVICE_OUTPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-output"
-#define PIPE_BUFFSIZE 512
+#define PIPE_BUFFSIZE 4096
 
 void Channel::init() {
     m_inputPipe = CreateNamedPipe(
         TEXT(PIPE_SERVICE_INPUT_PATH),
         PIPE_ACCESS_INBOUND,
         PIPE_READMODE_BYTE | PIPE_WAIT,
-        1,
+        PIPE_UNLIMITED_INSTANCES,
         0,
         PIPE_BUFFSIZE,
         NMPWAIT_USE_DEFAULT_WAIT,
@@ -24,7 +26,7 @@ void Channel::init() {
         TEXT(PIPE_SERVICE_OUTPUT_PATH),
         PIPE_ACCESS_OUTBOUND,
         PIPE_TYPE_BYTE | PIPE_WAIT,
-        1,
+        PIPE_UNLIMITED_INSTANCES,
         PIPE_BUFFSIZE,
         0,
         NMPWAIT_USE_DEFAULT_WAIT,
@@ -32,79 +34,92 @@ void Channel::init() {
     );
 
     if (m_inputPipe == INVALID_HANDLE_VALUE) {
-        printf("Input pipe creation failed, GLE=%d.\n", GetLastError());
+        LogWriter::log(L"Input pipe creation failed, GLE=%d.\n", GetLastError());
         return;
     }
 
     if (m_outputPipe == INVALID_HANDLE_VALUE) {
-        printf("Output pipe creation failed, GLE=%d.\n", GetLastError());
+        LogWriter::log(L"Output pipe creation failed, GLE=%d.\n", GetLastError());
         return;
     }
 }
 
 void Channel::listen(std::function<void(Message)> onMessage) {
-    printf("Waiting for client...\n");
+    LogWriter::log(L"Waiting for client...\n");
 
     if (ConnectNamedPipe(m_inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
         if (ConnectNamedPipe(m_outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-            printf("[OUTPUT] Client connected.\n");
+            LogWriter::log(L"[OUTPUT] Client connected.\n");
         }
         else {
-            printf("[OUTPUT] Client connection failed, GLE=%d.\n", GetLastError());
+            LogWriter::log(L"[OUTPUT] Client connection failed, GLE=%d.\n", GetLastError());
         }
 
-        printf("[INPUT] Client connected.\n");
+        LogWriter::log(L"[INPUT] Client connected.\n");
 
         int8_t buffer[PIPE_BUFFSIZE];
 
         while (ReadFile(m_inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
-            printf("[INPUT] Message received.\n[INPUT] Body -------------------------\n");
-            printf("[INPUT] Size of message in bytes: %d\n", sizeof(buffer));
-            printBytes(buffer, sizeof(buffer));
-            printf("[INPUT] Body end ---------------------\n");
-            Message message = messageDeserializer.createFromBytes(buffer, sizeof(buffer));
+            int8_t* readedBytes;
+            uint32_t readedBytesLength;
+
+            Message message = messageDeserializer.createFromBytes(
+                buffer,
+                sizeof(buffer),
+                &readedBytes,
+                &readedBytesLength
+            );
+
+            LogWriter::log(L"[INPUT] Message received.\n[INPUT] Body -------------------------\n");
+            LogWriter::log(L"[INPUT] Size of message in bytes: %d\n", readedBytesLength);
+            LogWriter::log(readedBytes, readedBytesLength);
+            LogWriter::log(L"[INPUT] Body end ---------------------\n");
+
+            delete readedBytes;
+
             onMessage(message);
         }
 
         DisconnectNamedPipe(m_inputPipe);
         DisconnectNamedPipe(m_outputPipe);
 
-        printf("[INPUT] Client disconnected.\n");
-        printf("[OUTPUT] Client disconnected.\n");
+        LogWriter::log(L"[INPUT] Client disconnected.\n");
+        LogWriter::log(L"[OUTPUT] Client disconnected.\n");
     }
     else {
-        printf("[INPUT] Client connection failed, GLE=%d.\n", GetLastError());
+        LogWriter::log(L"[INPUT] Client connection failed, GLE=%d.\n", GetLastError());
     }
 }
 
 void Channel::write(Message message) {
-    printf("Writing...\n");
+    LogWriter::log(L"Writing...\n");
 
-    printf("Body -------------------------\n");
+    LogWriter::log(L"Body -------------------------\n");
 
-    int8_t bytes[MESSAGE_BYTES_LENGTH];
+    ByteBuffer byteBuffer(0);
+    message.write(&byteBuffer);
 
-    message.writeToBytes(bytes, sizeof(bytes));
+    int8_t bytes[PIPE_BUFFSIZE] = { 0 };
+    byteBuffer.getInt8(bytes, byteBuffer.size());
 
-    printBytes(bytes, sizeof(MESSAGE_BYTES_LENGTH));
+    LogWriter::log(bytes, byteBuffer.size());
 
-    printf("Body end ---------------------\n");
+    LogWriter::log(L"Body end ---------------------\n");
 
     if (m_outputPipe == INVALID_HANDLE_VALUE) {
-        printf("Write failed because of pipe INVALID_HANDLE_VALUE.\n");
+        LogWriter::log(L"Write failed because of pipe INVALID_HANDLE_VALUE.\n");
         return;
     }
 
     if (WriteFile(m_outputPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
-        printf("Write failed, GLE=%d.\n", GetLastError());
+        LogWriter::log(L"Write failed, GLE=%d.\n", GetLastError());
         return;
     }
 
-    printf("Writing succeed.\n");
+    LogWriter::log(L"Writing succeed.\n");
 }
 
 void Channel::disconnect() {
     CloseHandle(m_inputPipe);
     CloseHandle(m_outputPipe);
-    CloseHandle(m_pipeThread);
 }

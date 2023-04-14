@@ -28,12 +28,6 @@ class AntivirusApiImpl: AntivirusApi {
     private var outputPipe: HANDLE = WinNT.INVALID_HANDLE_VALUE
     private var inputPipe: HANDLE = WinNT.INVALID_HANDLE_VALUE
 
-    init {
-        coroutineScope.launch {
-            startService()
-        }
-    }
-
     override suspend fun getStatus(): ApiMessage<MessageStruct> {
         val requestMessage = MessageStruct().apply {
             MessageMethod.GET_STATUS.id.copyInto(this.method)
@@ -389,7 +383,7 @@ class AntivirusApiImpl: AntivirusApi {
             )
         }
 
-        while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOP_PENDING) {
+        while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_START_PENDING) {
             var dwWaitTime = serviceStatusProcess.dwWaitHint / 10L
 
             if (dwWaitTime < 1000) {
@@ -584,7 +578,7 @@ class AntivirusApiImpl: AntivirusApi {
     companion object {
         private const val PIPE_SERVICE_INPUT_PATH = "\\\\.\\pipe\\antivirus-pipe-service-input"
         private const val PIPE_SERVICE_OUTPUT_PATH = "\\\\.\\pipe\\antivirus-pipe-service-output"
-        private const val PIPE_BUFFSIZE = 512
+        private const val PIPE_BUFFSIZE = 4096
         private const val ANTIVIRUS_SERVICE_NAME = "AntivirusService"
         private const val WINDOWS_SERVICE_STOP_TIMEOUT = 30000
         private const val REQUEST_TIMEOUT = 5000L

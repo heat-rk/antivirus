@@ -9,20 +9,21 @@ namespace Antivirus {
 	public:
 		class Deserializer : public Serializable::Deserializer<OutgoingMessageBodyScan> {
 		public:
-			virtual OutgoingMessageBodyScan create(ByteBuffer byteBuffer) const override {
+			virtual OutgoingMessageBodyScan create(ByteBuffer* byteBuffer) const override {
 				OutgoingMessageBodyScan body;
-				body.progress = byteBuffer.getInt32();
-				body.total = byteBuffer.getInt32();
-				body.pathLength = byteBuffer.getInt16();
-				byteBuffer.getWChars(body.path, body.pathLength);
-				body.infected = byteBuffer.getInt8();
+				body.progress = byteBuffer->getInt32();
+				body.total = byteBuffer->getInt32();
+				body.pathLength = byteBuffer->getInt32();
+				body.path = new wchar_t[body.pathLength];
+				byteBuffer->getWChars(body.path, body.pathLength);
+				body.infected = byteBuffer->getInt8();
 				return body;
 			}
 		};
 
 		int32_t progress;
 		int32_t total;
-		int16_t pathLength;
+		int32_t pathLength;
 		wchar_t* path;
 		int8_t infected;
 
