@@ -11,9 +11,7 @@ abstract class SerializableStruct {
     abstract fun write(byteBuffer: ByteBuffer)
 
     abstract class Deserializer<T: SerializableStruct> {
-        abstract val size: Int
-
-        fun create(bytes: ByteArray): T  = create(ByteBuffer.wrap(bytes))
+        fun create(bytes: ByteArray): T = create(ByteBuffer.wrap(bytes))
 
         abstract fun create(byteBuffer: ByteBuffer): T
     }

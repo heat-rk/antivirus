@@ -29,8 +29,6 @@ class MessageBodyErrorStruct : SerializableStruct() {
     }
 
     companion object : Deserializer<MessageBodyErrorStruct>() {
-        override val size = 64
-
         override fun create(byteBuffer: ByteBuffer) = MessageBodyErrorStruct().apply {
             byteBuffer.get(message)
         }

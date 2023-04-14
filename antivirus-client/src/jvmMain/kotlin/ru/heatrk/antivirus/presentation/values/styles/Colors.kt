@@ -41,7 +41,7 @@ val lightApplicationColors = ApplicationColors(
         onBackground = Color(0xFF000000),
         surface = Color(0xFFe9d7fc),
         onSurface = Color(0xFF000000),
-        error = Color(0xFF8A2929),
+        error = Color(0xFFF44336),
         onError = Color(0xFFFFFFFF)
     )
 )
@@ -59,7 +59,7 @@ val darkApplicationColors = ApplicationColors(
         onBackground = Color(0xFF000000),
         surface = Color(0xFFe9d7fc),
         onSurface = Color(0xFF000000),
-        error = Color(0xFF8A2929),
+        error = Color(0xFFF44336),
         onError = Color(0xFFFFFFFF)
     )
 )

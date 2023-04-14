@@ -10,19 +10,19 @@ namespace Antivirus {
 	public:
 		class Deserializer : public Serializable::Deserializer<VirusRecord> {
 		public:
-			virtual VirusRecord create(ByteBuffer byteBuffer) const override {
+			virtual VirusRecord create(ByteBuffer* byteBuffer) const override {
 				VirusRecord record;
-				record.nameLength = byteBuffer.getUInt8();
-				byteBuffer.getChars(record.name, record.nameLength);
-				record.type = byteBuffer.getUInt8();
+				record.nameLength = byteBuffer->getInt8();
+				byteBuffer->getChars(record.name, record.nameLength);
+				record.type = byteBuffer->getInt8();
 				record.signature = virusSignatureDeserializer.create(byteBuffer);
 				return record;
 			}
 		};
 
-		uint8_t nameLength;
+		int8_t nameLength;
 		char* name;
-		uint8_t type;
+		int8_t type;
 		VirusSignature signature;
 
 		virtual void write(ByteBuffer* byteBuffer) override {

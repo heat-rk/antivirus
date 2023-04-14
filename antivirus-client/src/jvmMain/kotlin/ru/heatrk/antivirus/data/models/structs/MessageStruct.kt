@@ -9,7 +9,8 @@ class MessageStruct : SerializableStruct() {
     val uuid: ByteArray = Native.toByteArray(UUID.randomUUID().toString())
     var timestamp: Long = System.currentTimeMillis()
     var status: Byte = 0
-    val body: ByteArray = ByteArray(256)
+    var bodySize: Int = 0
+    var body: ByteArray? = null
 
     fun isUuidEquals(other: MessageStruct) =
         uuid.contentEquals(other.uuid) && method.contentEquals(other.method)
@@ -19,7 +20,8 @@ class MessageStruct : SerializableStruct() {
         byteBuffer.put(uuid)
         byteBuffer.putLong(timestamp)
         byteBuffer.put(status)
-        byteBuffer.put(body)
+        byteBuffer.putInt(bodySize)
+        byteBuffer.put(body ?: ByteArray(0))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -32,6 +34,7 @@ class MessageStruct : SerializableStruct() {
         if (!uuid.contentEquals(other.uuid)) return false
         if (timestamp != other.timestamp) return false
         if (status != other.status) return false
+        if (bodySize != other.bodySize) return false
         if (!body.contentEquals(other.body)) return false
 
         return true
@@ -42,23 +45,24 @@ class MessageStruct : SerializableStruct() {
         result = 31 * result + uuid.contentHashCode()
         result = 31 * result + timestamp.hashCode()
         result = 31 * result + status.hashCode()
+        result = 31 * result + bodySize.hashCode()
         result = 31 * result + body.contentHashCode()
         return result
     }
 
     override fun toString(): String {
-        return "MessageStruct(method=${method.contentToString()}, uuid=${uuid.contentToString()}, timestamp=$timestamp, status=$status, body=${body.contentToString()})"
+        return "MessageStruct(method=${method.contentToString()}, uuid=${uuid.contentToString()}, timestamp=$timestamp, status=$status, bodySize=$bodySize, body=${body.contentToString()})"
     }
 
 
     companion object : Deserializer<MessageStruct>() {
-        override val size = 334
-
         override fun create(byteBuffer: ByteBuffer) = MessageStruct().apply {
             byteBuffer.get(method)
             byteBuffer.get(uuid)
             timestamp = byteBuffer.long
             status = byteBuffer.get()
+            bodySize = byteBuffer.int
+            body = ByteArray(bodySize)
             byteBuffer.get(body)
         }
     }

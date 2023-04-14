@@ -7,9 +7,9 @@ namespace Antivirus {
 	private:
 		const LPCWSTR m_SERVICE_NAME = L"AntivirusService";
 		const LPCWSTR m_SERVICE_DISPLAY_NAME = L"Antivirus Service";
-		char16_t* m_serviceBinaryPath;
+		wchar_t* m_serviceBinaryPath;
 	public:
-		ServiceManager(char16_t* serviceBinaryPath)
+		ServiceManager(wchar_t* serviceBinaryPath)
 			: m_serviceBinaryPath(serviceBinaryPath) 
 		{}
 
@@ -18,5 +18,7 @@ namespace Antivirus {
 		int runService();
 		int stopService();
 		int loadBaseInput(wchar_t* path);
+		int scan(wchar_t* path);
+		int logs();
 	};
 }

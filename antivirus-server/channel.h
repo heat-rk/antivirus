@@ -14,7 +14,6 @@ namespace Antivirus {
     private:
         HANDLE m_inputPipe;
         HANDLE m_outputPipe;
-        HANDLE m_pipeThread;
     public:
         void init();
         void listen(std::function<void(Message)> onMessage);

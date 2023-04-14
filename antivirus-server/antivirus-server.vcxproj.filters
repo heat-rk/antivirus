@@ -52,6 +52,12 @@
     <Filter Include="Исходные файлы\core\sha256">
       <UniqueIdentifier>{a3078563-5d27-4970-8962-4255c3b74cb7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\app\models\incoming">
+      <UniqueIdentifier>{3cd0b8d2-e70a-4615-9ecc-7085aa593159}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\core\logger">
+      <UniqueIdentifier>{4ff00adb-966c-43c0-8483-4c400b13719d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -80,6 +86,18 @@
     </ClCompile>
     <ClCompile Include="SignatureBaseFile.cpp">
       <Filter>Исходные файлы\core\signatures</Filter>
+    </ClCompile>
+    <ClCompile Include="AppDataProvider.cpp">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ScannerCache.cpp">
+      <Filter>Исходные файлы\app\scanner</Filter>
+    </ClCompile>
+    <ClCompile Include="LogWriter.cpp">
+      <Filter>Исходные файлы\core\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="LogReader.cpp">
+      <Filter>Исходные файлы\core\logger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +148,33 @@
     </ClInclude>
     <ClInclude Include="SignatureBaseFile.h">
       <Filter>Исходные файлы\core\signatures</Filter>
+    </ClInclude>
+    <ClInclude Include="VirusFileTypes.h">
+      <Filter>Исходные файлы\core\signatures</Filter>
+    </ClInclude>
+    <ClInclude Include="OutgoingMessageBodyScan.h">
+      <Filter>Исходные файлы\app\models\outgoing</Filter>
+    </ClInclude>
+    <ClInclude Include="AppDataProvider.h">
+      <Filter>Исходные файлы\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="IncomingMessageBodyScan.h">
+      <Filter>Исходные файлы\app\models\incoming</Filter>
+    </ClInclude>
+    <ClInclude Include="ScannerCache.h">
+      <Filter>Исходные файлы\app\scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="OutgoingMessageBodyScanLast.h">
+      <Filter>Исходные файлы\app\models\outgoing</Filter>
+    </ClInclude>
+    <ClInclude Include="LogWriter.h">
+      <Filter>Исходные файлы\core\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="LogReader.h">
+      <Filter>Исходные файлы\core\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="LogConstants.h">
+      <Filter>Исходные файлы\core\logger</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

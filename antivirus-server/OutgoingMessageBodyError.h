@@ -9,9 +9,9 @@ namespace Antivirus {
 	public:
 		class Deserializer : public Serializable::Deserializer<OutgoingMessageBodyError> {
 		public:
-			virtual OutgoingMessageBodyError create(ByteBuffer byteBuffer) const override {
+			virtual OutgoingMessageBodyError create(ByteBuffer* byteBuffer) const override {
 				OutgoingMessageBodyError body;
-				byteBuffer.getChars(body.message, sizeof(body.message));
+				byteBuffer->getChars(body.message, sizeof(body.message));
 				return body;
 			}
 		};

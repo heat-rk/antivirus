@@ -29,14 +29,22 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 	if (filename == NULL) return false;
 
 	if (!isFileExist(filename) || trunc) {
-		m_file.open(filename, ios::out | ios::binary);
+		m_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
-		if (!m_file.is_open()) return false;
+		try {
+			m_file.open(filename, ios::out | ios::binary);
+		} catch (std::system_error& e) {
+			printf("%s\n", e.code().message().c_str());
+		}
 
-		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(uint32_t));
+		if (!m_file.is_open()) {
+			return false;
+		}
+
+		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(int32_t));
 
 		byteBuffer.put((char*)SIGN, sizeof(SIGN));
-		byteBuffer.put(this->m_recordsCount);
+		byteBuffer.put((int32_t) this->m_recordsCount);
 
 		char* bytes = new char[byteBuffer.size()];
 		byteBuffer.getChars(bytes, byteBuffer.size());
@@ -63,7 +71,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 			return false;
 		}
 
-		this->m_recordsCount = byteBuffer.getUInt32();
+		this->m_recordsCount = byteBuffer.getInt32();
 
 		delete bytes;
 	}
@@ -92,8 +100,8 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 	this->m_recordsCount++;
 
 	byteBuffer.clear();
-	byteBuffer.resize(sizeof(uint32_t));
-	byteBuffer.put(this->m_recordsCount);
+	byteBuffer.resize(sizeof(int32_t));
+	byteBuffer.put((int32_t) this->m_recordsCount);
 
 	char* recordsCountBytes = new char[byteBuffer.size()];
 	byteBuffer.getChars(recordsCountBytes, byteBuffer.size());
@@ -115,7 +123,7 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 
 		if (!m_file.is_open()) return false;
 
-		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(uint32_t));
+		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(int32_t));
 
 		char* bytes = new char[byteBuffer.size()];
 		m_file.read(bytes, byteBuffer.size());
@@ -129,7 +137,7 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 			return false;
 		}
 
-		this->m_recordsCount = byteBuffer.getUInt32();
+		this->m_recordsCount = byteBuffer.getInt32();
 
 		delete bytes;
 	}
@@ -144,14 +152,14 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 bool SignatureBaseFileReader::readRecord(VirusRecord* record) {
 	if (record == NULL || !m_file.is_open()) return false;
 
-	ByteBuffer byteBuffer(sizeof(uint8_t));
-	char nameLength[sizeof(uint8_t)];
+	ByteBuffer byteBuffer(sizeof(int8_t));
+	char nameLength[sizeof(int8_t)];
 	m_file.read(nameLength, sizeof(nameLength));
-	byteBuffer.put(nameLength, sizeof(uint8_t));
-	record->nameLength = byteBuffer.getUInt8();
+	byteBuffer.put(nameLength, sizeof(int8_t));
+	record->nameLength = byteBuffer.getInt8();
 
 	byteBuffer.clear();
-	byteBuffer.resize(virusSignatureSize + record->nameLength);
+	byteBuffer.resize(virusSignatureSize + record->nameLength + sizeof(int8_t));
 
 	char* bytes = new char[byteBuffer.size()];
 	m_file.read(bytes, byteBuffer.size());
@@ -159,7 +167,8 @@ bool SignatureBaseFileReader::readRecord(VirusRecord* record) {
 
 	record->name = new char[record->nameLength];
 	byteBuffer.getChars(record->name, record->nameLength);
-	record->signature = virusSignatureDeserializer.create(byteBuffer);
+	record->type = byteBuffer.getInt8();
+	record->signature = virusSignatureDeserializer.create(&byteBuffer);
 
 	delete bytes;
 

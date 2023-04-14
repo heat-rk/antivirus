@@ -9,4 +9,15 @@ interface AntivirusApi {
     suspend fun stopService(): ApiMessage<Unit>
 
     suspend fun getStatus(): ApiMessage<MessageStruct>
+
+    sealed interface ScanState {
+        object Idle : ScanState
+
+        data class Running(
+            val progress: Int,
+            val total: Int,
+            val path: String,
+            val isInfected: String
+        ) : ScanState
+    }
 }

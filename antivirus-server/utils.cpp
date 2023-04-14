@@ -25,9 +25,46 @@ Message Antivirus::generateMessage(
 	message.status = status;
 	message.timestamp = timeSinceEpochMillis();
 
-	ByteBuffer byteBuffer(sizeof(message.body));
+	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	byteBuffer.getInt8(message.body, sizeof(message.body));
+	message.bodySize = byteBuffer.size();
+	message.body = new int8_t[message.bodySize];
+	byteBuffer.getInt8(message.body, byteBuffer.size());
+
+	return message;
+}
+
+Message Antivirus::generateMessage(
+	char* method,
+	int8_t status,
+	Serializable* body
+) {
+	Message message;
+
+	snprintf(message.method, sizeof(message.method), "%s", method);
+
+	message.status = status;
+	message.timestamp = timeSinceEpochMillis();
+
+	ByteBuffer byteBuffer(0);
+	body->write(&byteBuffer);
+	message.bodySize = byteBuffer.size();
+	message.body = new int8_t[message.bodySize];
+	byteBuffer.getInt8(message.body, byteBuffer.size());
+
+	return message;
+}
+
+Message Antivirus::generateMessage(
+	char* method,
+	int8_t status
+) {
+	Message message;
+
+	snprintf(message.method, sizeof(message.method), "%s", method);
+
+	message.status = status;
+	message.timestamp = timeSinceEpochMillis();
 
 	return message;
 }
@@ -67,10 +104,6 @@ int8_t Antivirus::toInt8(std::string str) {
 	return std::stoi(str);
 }
 
-uint8_t Antivirus::toUInt8(std::string str) {
-	return static_cast<uint8_t>(std::stoul(str));
-}
-
-uint32_t Antivirus::toUInt32(std::string str) {
-	return static_cast<uint32_t>(std::stoul(str));
+int32_t Antivirus::toInt32(std::string str) {
+	return static_cast<int32_t>(std::stoul(str));
 }

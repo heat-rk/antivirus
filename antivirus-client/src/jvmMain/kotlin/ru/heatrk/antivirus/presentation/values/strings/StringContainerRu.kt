@@ -18,6 +18,16 @@ object StringContainerRu: StringsContainer {
                 "что полностью отключить службу работы антивируса невозможно! " +
                 "Служба автоматически начинает свою работу во время запуска ОС."
 
+    override val scanUnavailable = "Сканирование невозможно. Проверьте работу сервиса!"
+
+    override val scan = "Сканировать"
+    override val clickToScan = "Нажми, чтобы начать сканирование!"
+    override val pause = "Пауза"
+    override val paused = "Приостановлено"
+    override val stop = "Остановить"
+    override val resume = "Продолжить"
+    override val more = "Подробнее"
+
     override fun errorMessage(description: String, errorCode: Int?) =
         buildString {
             append("Что-то пошло не так. Ошибка: $description")
@@ -26,4 +36,10 @@ object StringContainerRu: StringsContainer {
                 append("; код $errorCode")
             }
         }
+
+    override fun scanOf(path: String) =
+        "Сканирование: $path"
+
+    override fun virusesDetected(count: Int) =
+        "Вирусов обнаружено: $count"
 }

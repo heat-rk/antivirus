@@ -7,6 +7,7 @@
 #include "StatusNotifier.h"
 #include "MessageMethod.h"
 #include "ServiceManager.h"
+#include "IncomingMessageBodyScan.h"
 
 using namespace Antivirus;
 using namespace std;
@@ -23,6 +24,27 @@ StatusNotifier          statusNotifier;
 void handleClientMessage(Message message) {
     if (cmpstrs(MessageMethod::E_GET_STATUS, message.method, sizeof(message.method))) {
         statusNotifier.handleIncomingMessage(message);
+    } else if (cmpstrs(MessageMethod::E_SCAN_START, message.method, sizeof(message.method))) {
+        IncomingMessageBodyScan body =
+            incomingMessageBodyScanDeserializer.createFromBytes(message.body, sizeof(message.body));
+
+        TCHAR commandLine[MAX_PATH];
+        GetModuleFileName(NULL, commandLine, MAX_PATH);
+
+        TCHAR newCommandLine[MAX_PATH];
+        wcscpy_s(newCommandLine, commandLine);
+        wcscat_s(newCommandLine, L" --scan ");
+        wcscat_s(newCommandLine, body.path);
+
+        STARTUPINFO si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+
+        if (CreateProcess(NULL, newCommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+    } else if (cmpstrs(MessageMethod::E_SCAN_LAST, message.method, sizeof(message.method))) {
+        
     }
 }
 
@@ -164,7 +186,7 @@ int wmain(int argc, wchar_t* argv[]) {
             destroy();
         }
     } else {
-        ServiceManager sm { reinterpret_cast<char16_t*>(argv[0]) };
+        ServiceManager sm(argv[0]);
 
         if (wcscmp(argv[1], L"--install") == 0) {
             sm.installService();
@@ -177,6 +199,12 @@ int wmain(int argc, wchar_t* argv[]) {
         }
         else if (wcscmp(argv[1], L"--load-base") == 0) {
             sm.loadBaseInput(argv[2]);
+        }
+        else if (wcscmp(argv[1], L"--scan") == 0) {
+            sm.scan(argv[2]);
+        }
+        else if (wcscmp(argv[1], L"--logs") == 0) {
+            sm.logs();
         }
     }
 
