@@ -1,16 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <Windows.h>
-#include <stdio.h>
-#include <filesystem>
-
-using namespace std;
+#include <string>
 
 namespace Antivirus {
 	class ScannerCache {
 	public:
-		void save(vector<wstring> viruses);
-		void load(vector<wstring>* dest);
+		void save(std::vector<std::wstring> viruses);
+		void load(std::vector<std::wstring>* dest);
 	};
 }

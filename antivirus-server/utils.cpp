@@ -5,10 +5,9 @@
 #include <Windows.h>
 
 using namespace Antivirus;
-using namespace std::chrono;
 
 int64_t Antivirus::timeSinceEpochMillis() {
-	return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 Message Antivirus::generateMessage(

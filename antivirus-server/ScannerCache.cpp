@@ -3,12 +3,15 @@
 #include "ByteBuffer.h"
 
 #include <fstream>
+#include <Windows.h>
+#include <stdio.h>
+#include <filesystem>
 
 #define SCANNER_DATA_FILE_NAME L"scanner-data"
 
 using namespace Antivirus;
 
-void ScannerCache::save(vector<wstring> viruses) {
+void ScannerCache::save(std::vector<std::wstring> viruses) {
     /*wchar_t* appdataPath;
     appdataDirectory(&appdataPath);
     wcscat_s(appdataPath, MAX_PATH, SCANNER_DATA_FILE_NAME);
@@ -51,6 +54,6 @@ void ScannerCache::save(vector<wstring> viruses) {
     delete bytes;*/
 }
 
-void ScannerCache::load(vector<wstring>* dest) {
+void ScannerCache::load(std::vector<std::wstring>* dest) {
 
 }

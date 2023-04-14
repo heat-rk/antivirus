@@ -12,8 +12,6 @@
 #include <map>
 #include <vector>
 
-using namespace std;
-
 namespace Antivirus {
 	class Scanner {
 	public:
@@ -27,14 +25,14 @@ namespace Antivirus {
 		bool m_isScanning;
 		HANDLE m_scannerThread;
 		ThreadParams* m_threadParams;
-		map<int64_t, vector<VirusRecord>> m_records;
+		std::map<int64_t, std::vector<VirusRecord>> m_records;
 		Sha256 m_sha256;
 		Channel m_channel;
 		ScannerCache m_cache;
 
-		void findEntries(wstring path, vector<wstring>* entries);
+		void findEntries(std::wstring path, std::vector<std::wstring>* entries);
 
-		bool scan(ifstream* file);
+		bool scan(std::ifstream* file);
 		bool scan(int8_t* bytes, uint64_t length);
 		bool scan(int8_t* bytes, uint64_t length, uint64_t offset);
 

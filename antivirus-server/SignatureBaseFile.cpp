@@ -32,7 +32,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 		m_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 		try {
-			m_file.open(filename, ios::out | ios::binary);
+			m_file.open(filename, std::ios::out | std::ios::binary);
 		} catch (std::system_error& e) {
 			printf("%s\n", e.code().message().c_str());
 		}
@@ -53,7 +53,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 
 		delete bytes;
 	} else {
-		m_file.open(filename, ios::in | ios::out | ios::binary);
+		m_file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
 
 		if (!m_file.is_open()) return false;
 
@@ -83,7 +83,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 	if (!m_file.is_open()) return false;
 
-	m_file.seekp(0, ios::end);
+	m_file.seekp(0, std::ios::end);
 
 	ByteBuffer byteBuffer(virusSignatureSize + record.nameLength + sizeof(uint8_t));
 	record.write(&byteBuffer);
@@ -95,7 +95,7 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 
 	delete bytes;
 
-	m_file.seekp(sizeof(SIGN), ios::beg);
+	m_file.seekp(sizeof(SIGN), std::ios::beg);
 
 	this->m_recordsCount++;
 
@@ -119,7 +119,7 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 	if (filename == NULL) return false;
 
 	if (isFileExist(filename)) {
-		m_file.open(filename, ios::in | ios::out | ios::binary);
+		m_file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
 
 		if (!m_file.is_open()) return false;
 

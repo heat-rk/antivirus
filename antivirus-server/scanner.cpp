@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <filesystem>
-
 #include "Scanner.h"
 #include "OutgoingMessageBodyScan.h"
 #include "OutgoingMessageBodyError.h"
@@ -10,8 +7,10 @@
 #include "MessageStatus.h"
 #include "ByteBuffer.h"
 
+#include <stdio.h>
+#include <filesystem>
+
 using namespace Antivirus;
-using namespace std;
 
 DWORD WINAPI scannerThreadHandler(LPVOID lpvParam) {
     Scanner::ThreadParams* params = reinterpret_cast<Scanner::ThreadParams*>(lpvParam);
@@ -72,7 +71,7 @@ Scanner::~Scanner() {
 
 void Scanner::addRecord(VirusRecord record) {
     if (m_records.find(record.signature.first) == m_records.end()) {
-        vector<VirusRecord> vec;
+        std::vector<VirusRecord> vec;
         m_records[record.signature.first] = vec;
     }
 
@@ -85,7 +84,7 @@ void Scanner::start(wchar_t* path) {
 
         OutgoingMessageBodyError body;
 
-        copy(message, message + sizeof(message), body.message);
+        std::copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
             (char*) MessageMethod::E_SCAN_START,
@@ -106,8 +105,8 @@ void Scanner::start(wchar_t* path) {
     printf("Finding entries...\n");
 
     bool infected;
-    vector<wstring> entries;
-    vector<wstring> viruses;
+    std::vector<std::wstring> entries;
+    std::vector<std::wstring> viruses;
     findEntries(path, &entries);
 
     printf("Entries count = %d\n", entries.size());
@@ -125,8 +124,8 @@ void Scanner::start(wchar_t* path) {
 
         wprintf(L"Scanning of %ls ...\n", entry);
 
-        ifstream* file = new ifstream;
-        file->open(entry, ios::binary);
+        std::ifstream* file = new std::ifstream;
+        file->open(entry, std::ios::binary);
         infected = scan(file);
 
         OutgoingMessageBodyScan body;
@@ -135,7 +134,7 @@ void Scanner::start(wchar_t* path) {
         body.total = entries.size();
         body.pathLength = wcslen(entry);
         body.path = new wchar_t[body.pathLength];
-        copy(entry, entry + body.pathLength, body.path);
+        std::copy(entry, entry + body.pathLength, body.path);
 
         if (infected) {
             body.infected = 1;
@@ -181,13 +180,13 @@ bool Scanner::isScanning() {
     return m_isScanning;
 }
 
-bool Scanner::scan(ifstream* file) {
+bool Scanner::scan(std::ifstream* file) {
     if (!file->is_open()) {
         char message[] = "Scanner:Ifstream:Scan: file is not open\n";
 
         OutgoingMessageBodyError body;
 
-        copy(message, message + sizeof(message), body.message);
+        std::copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
             (char*)MessageMethod::E_SCAN_START,
@@ -230,7 +229,7 @@ bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset) {
     byteBuffer.put(bytes + offset, sizeof(int64_t));
     int64_t first = byteBuffer.getInt64();
     VirusRecord record;
-    vector<VirusRecord> records = m_records[first];
+    std::vector<VirusRecord> records = m_records[first];
     int8_t* hash;
 
     for (int i = 0; i < records.size(); i++) {
@@ -259,7 +258,7 @@ bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset) {
     return false;
 }
 
-void Scanner::findEntries(wstring path, vector<wstring>* entries) {
+void Scanner::findEntries(std::wstring path, std::vector<std::wstring>* entries) {
     std::error_code ec;
 
     if (std::filesystem::is_directory(path, ec)) {
@@ -273,7 +272,7 @@ void Scanner::findEntries(wstring path, vector<wstring>* entries) {
 
         OutgoingMessageBodyError body;
 
-        copy(message, message + sizeof(message), body.message);
+        std::copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
             (char*)MessageMethod::E_SCAN_START,
@@ -296,7 +295,7 @@ void Scanner::findEntries(wstring path, vector<wstring>* entries) {
 
         OutgoingMessageBodyError body;
 
-        copy(message, message + sizeof(message), body.message);
+        std::copy(message, message + sizeof(message), body.message);
 
         Message response = generateMessage(
             (char*)MessageMethod::E_SCAN_START,

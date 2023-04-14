@@ -16,7 +16,6 @@
 #include "LogReader.h"
 
 using namespace Antivirus;
-using namespace std;
 
 #define BASE_FILE_NAME L"antivirus-base"
 

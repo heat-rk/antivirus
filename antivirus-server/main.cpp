@@ -10,7 +10,6 @@
 #include "IncomingMessageBodyScan.h"
 
 using namespace Antivirus;
-using namespace std;
 
 wchar_t const* const SERVICE_NAME = TEXT("AntivirusService");
 

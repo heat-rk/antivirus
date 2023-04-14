@@ -3,7 +3,6 @@
 #include "ByteBuffer.h"
 #include "LogWriter.h"
 
-using namespace std;
 using namespace Antivirus;
 
 #define PIPE_SERVICE_INPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-input"
