@@ -27,7 +27,7 @@ void ScannerCache::save(std::vector<std::wstring> viruses) {
     }
 
     if (!scannerDataFile.is_open()) {
-        char message[] = "Scanner:Save: Scanner cache file can't be opened\n";
+        char message[] = "Scanner:ScannerCache: Scanner cache file can't be opened\n";
         LogWriter::log(message);
         return;
     }
@@ -67,12 +67,14 @@ void ScannerCache::load(std::vector<std::wstring>* dest) {
         scannerDataFile.open(appdataPath, std::ios::in | std::ios::binary);
     }
     catch (std::system_error& e) {
-        LogWriter::log("%s\n", e.code().message().c_str());
+        LogWriter::log("ScannerCache:Load: Error while opening cache file (code = %d, meaning = %s)\n", e.code(), e.what());
+        CoTaskMemFree(appdataPath);
+        return;
     }
 
     if (!scannerDataFile.is_open()) {
-        char message[] = "Scanner:Load: Scanner cache file can't be opened\n";
-        LogWriter::log(message);
+        LogWriter::log("ScannerCache:Load: Scanner cache file can't be opened\n");
+        CoTaskMemFree(appdataPath);
         return;
     }
 

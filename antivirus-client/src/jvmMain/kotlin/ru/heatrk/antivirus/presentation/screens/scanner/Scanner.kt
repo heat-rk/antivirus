@@ -28,6 +28,28 @@ fun Scanner(
         is ScannerViewState.Idle -> ScannerIdle(state, onIntent, modifier)
         is ScannerViewState.Running -> ScannerRunning(state, onIntent, modifier)
         is ScannerViewState.VirusesDetected -> ScannerVirusesDetected(state, onIntent, modifier)
+        is ScannerViewState.Loading -> ScannerLoading(state, modifier)
+    }
+}
+
+@Composable
+private fun ScannerLoading(
+    state: ScannerViewState.Loading,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = ApplicationTheme.shapes.medium,
+        modifier = modifier
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(InsetsDimens.ExtraLarge)
+        ) {
+            CircularProgressIndicator()
+        }
     }
 }
 

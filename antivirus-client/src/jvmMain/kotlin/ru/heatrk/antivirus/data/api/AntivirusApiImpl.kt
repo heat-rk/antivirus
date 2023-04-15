@@ -235,8 +235,14 @@ class AntivirusApiImpl: AntivirusApi {
                     WinBase.OVERLAPPED()
                 )
 
+                println("Message bytes:\n${buffer.contentToString()}\n-------------")
+
                 if (isSuccess) {
-                    _incomingMessages.emit(ApiMessage.Ok(MessageStruct.create(buffer)))
+                    _incomingMessages.emit(ApiMessage.Ok(
+                        MessageStruct.create(buffer).also {
+                            println("Mapped message:\n${it}\n------------")
+                        }
+                    ))
                 } else {
                     _incomingMessages.emit(ApiMessage.Fail(
                         description = "Input pipe reading",

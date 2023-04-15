@@ -1,6 +1,8 @@
 package ru.heatrk.antivirus.presentation.screens.scanner
 
 sealed interface ScannerViewState {
+    object Loading : ScannerViewState
+
     data class Idle(
         val isEnabled: Boolean,
         val isFileDialogVisible: Boolean = false

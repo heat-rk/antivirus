@@ -31,7 +31,8 @@ class AntivirusRootComponent(
     )
 
     val scannerComponent = ScannerComponent(
-        componentContext = childContext(key = "scannerComponent")
+        componentContext = childContext(key = "scannerComponent"),
+        messagingRepository = messagingRepository
     )
 
     private val statusListeners = listOf<ServiceStatusListener>(

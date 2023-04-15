@@ -41,6 +41,7 @@ class MessageBodyScanLastStruct : SerializableStruct() {
                 val pathLength = byteBuffer.int
                 val path = ByteArray(pathLength)
                 byteBuffer.get(path)
+                viruses.add(path)
             }
         }
     }

@@ -34,16 +34,22 @@ void LogWriter::log(const char* format, ...) {
     char message[PIPE_LOG_BUFFSIZE];
     vsprintf_s(message, PIPE_LOG_BUFFSIZE, format, args);
 
+    int len = strlen(message) + 1;
+    wchar_t* wc_string = new wchar_t[len];
+
+    MultiByteToWideChar(CP_UTF8, 0, message, -1, wc_string, len);
+
     openPipe();
     printf(message);
 
-    if (WriteFile(m_pipe, message, PIPE_LOG_BUFFSIZE, NULL, NULL) != TRUE) {
+    if (WriteFile(m_pipe, wc_string, PIPE_LOG_BUFFSIZE, NULL, NULL) != TRUE) {
         if (GetLastError() != ERROR_PIPE_LISTENING) {
             wprintf(L"[LogWriter] Write failed, GLE=%d.\n", GetLastError());
         }
     }
 
     va_end(args);
+    delete[] wc_string;
 }
 
 void LogWriter::log(int8_t* bytes, int32_t size) {
@@ -63,9 +69,7 @@ void LogWriter::log(int8_t* bytes, int32_t size) {
     wprintf(message);
 
     if (WriteFile(m_pipe, message, PIPE_LOG_BUFFSIZE, NULL, NULL) != TRUE) {
-        if (GetLastError() != ERROR_PIPE_LISTENING) {
-            wprintf(L"[LogWriter] Write failed, GLE=%d.\n", GetLastError());
-        }
+        wprintf(L"[LogWriter] Write failed, GLE=%d.\n", GetLastError());
     }
 }
 

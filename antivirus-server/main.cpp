@@ -59,19 +59,19 @@ void handleClientMessage(Message message) {
 
         for (int i = 0; i < viruses.size(); i++) {
             auto virus = viruses[i];
-            body.pathLengths[i] = virus.size();
+            body.pathLengths[i] = virus.size() + 1;
             body.paths[i] = new wchar_t[body.pathLengths[i]];
             wcscpy_s(body.paths[i], body.pathLengths[i], virus.c_str());
         }
 
-        Message message = generateMessage(
+        Message response = generateMessage(
             message.method,
             message.uuid,
             MessageStatus::E_OK,
             &body
         );
 
-        channel.write(message);
+        channel.write(response);
     }
 }
 
