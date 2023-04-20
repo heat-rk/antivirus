@@ -9,6 +9,7 @@
 #include "ServiceManager.h"
 #include "IncomingMessageBodyScan.h"
 #include "LogWriter.h"
+#include "ScannerCache.h"
 
 using namespace Antivirus;
 
@@ -45,6 +46,9 @@ void handleClientMessage(Message message) {
 }
 
 void init() {
+    ScannerCache scannerCache;
+    scannerCache.validate();
+
     channel.init(CHANNEL_TYPE_EXTERNAL);
     internalChannel.init(CHANNEL_TYPE_INTERNAL);
 }

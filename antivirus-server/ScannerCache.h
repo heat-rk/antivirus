@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-
 #include <vector>
 #include <string>
 #include <fstream>
@@ -19,5 +18,13 @@ namespace Antivirus {
 			std::vector<int8_t> statuses,
 			int8_t scannerStatus
 		);
+
+		bool load(
+			std::vector<std::wstring>* all,
+			std::vector<int8_t>* statuses,
+			int8_t* scannerStatus
+		);
+
+		void validate();
 	};
 }

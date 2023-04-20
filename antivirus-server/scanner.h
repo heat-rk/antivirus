@@ -24,8 +24,8 @@ namespace Antivirus {
 		};
 	private:
 		HANDLE m_scannerChannelThread;
-		HANDLE m_stopEvent;
 		HANDLE m_resumeEvent;
+		bool m_active;
 		ChannelThreadParams* m_channelThreadParams;
 		std::map<int64_t, std::vector<VirusRecord>> m_records;
 		Sha256 m_sha256;

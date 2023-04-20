@@ -42,7 +42,7 @@ class ScannerComponent(
             is ScannerIntent.Pause -> applyPauseScanIntent(intent)
             is ScannerIntent.Resume -> applyResumeScanIntent(intent)
             is ScannerIntent.Start -> applyStartScanIntent(intent)
-            is ScannerIntent.Stop -> Unit
+            is ScannerIntent.Stop -> applyStopScanIntent(intent)
             is ScannerIntent.ShowFileSelectionDialog -> applySelectFileIntent(intent)
             is ScannerIntent.HideFileSelectionDialog -> applyHideFileSelectionDialogIntent(intent)
             is ScannerIntent.MessageDialogDismiss -> applyMessageDialogDismiss(intent)
@@ -135,6 +135,10 @@ class ScannerComponent(
 
     private fun applyResumeScanIntent(intent: ScannerIntent.Resume) = componentScope.launch {
         handleRequestResult(messagingRepository.resumeScan())
+    }
+
+    private fun applyStopScanIntent(intent: ScannerIntent.Stop) = componentScope.launch {
+        handleRequestResult(messagingRepository.stopScan())
     }
 
     private fun updateLoadingState() {

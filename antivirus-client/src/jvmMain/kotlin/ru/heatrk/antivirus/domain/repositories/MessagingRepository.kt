@@ -12,5 +12,6 @@ interface MessagingRepository {
     suspend fun startScan(path: String): ApiMessage<Unit>
     suspend fun pauseScan(): ApiMessage<Unit>
     suspend fun resumeScan(): ApiMessage<Unit>
+    suspend fun stopScan(): ApiMessage<Unit>
     fun scanState(scope: CoroutineScope) : StateFlow<ScanState>
 }

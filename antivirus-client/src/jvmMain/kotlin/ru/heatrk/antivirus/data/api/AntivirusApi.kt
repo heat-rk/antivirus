@@ -15,5 +15,6 @@ interface AntivirusApi {
     suspend fun stopService(): ApiMessage<Unit>
     suspend fun startScan(path: String): ApiMessage<Unit>
     suspend fun pauseScan(): ApiMessage<Unit>
+    suspend fun stopScan(): ApiMessage<Unit>
     suspend fun resumeScan(): ApiMessage<Unit>
 }

@@ -149,6 +149,15 @@ class AntivirusApiImpl(
         return send(requestMessage)
     }
 
+    override suspend fun stopScan(): ApiMessage<Unit> {
+        val requestMessage = MessageStruct().apply {
+            MessageMethod.SCAN_STOP.id.copyInto(this.method)
+            status = MessageStatus.REQUEST.id
+        }
+
+        return send(requestMessage)
+    }
+
     override suspend fun isServiceEnabled(): ApiMessage<Boolean> {
         val scManager = advapi32.OpenSCManager(null, null, Winsvc.SC_MANAGER_CONNECT)
             ?: return ApiMessage.Fail(

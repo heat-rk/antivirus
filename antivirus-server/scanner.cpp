@@ -34,9 +34,10 @@ DWORD WINAPI scannerChannelThreadHandler(LPVOID lpvParam) {
 }
 
 Scanner::Scanner() {
+    m_active = true;
+
     m_firstBytesBuffer = ByteBuffer(sizeof(int64_t));
 
-    m_stopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     m_resumeEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
     m_channel.init(CHANNEL_TYPE_INTERNAL);
@@ -116,6 +117,10 @@ void Scanner::start(wchar_t* path) {
             offset++
         ) {
             if (WaitForSingleObject(m_resumeEvent, INFINITE) == WAIT_OBJECT_0) {
+                if (!m_active) {
+                    return;
+                }
+
                 int8_t status = NOT_SCANNED;
 
                 if (length < sizeof(int64_t)) {
@@ -146,9 +151,6 @@ void Scanner::start(wchar_t* path) {
     }
 
     updateStatus(SCANNED, true);
-    SetEvent(m_stopEvent);
-
-    WaitForSingleObject(m_stopEvent, INFINITE);
 }
 
 void Scanner::pause() {
@@ -165,8 +167,9 @@ void Scanner::resume() {
 
 void Scanner::stop() {
     updateStatus(SCANNED, true);
+    m_active = false;
     LogWriter::log(L"Scanner: stop\n");
-    SetEvent(m_stopEvent);
+    SetEvent(m_resumeEvent);
 }
 
 bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset) {
@@ -238,7 +241,7 @@ void Scanner::findEntries(std::wstring path) {
 void Scanner::updateStatus(int8_t status, bool force) {
     if (force) {
         m_scanStatus = status;
-    } else if (m_scanStatus != PAUSED) {
+    } else if (m_scanStatus != PAUSED && m_scanStatus != SCANNED) {
         m_scanStatus = status;
     }
 

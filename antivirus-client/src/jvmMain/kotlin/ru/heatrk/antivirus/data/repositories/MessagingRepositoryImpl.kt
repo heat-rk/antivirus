@@ -6,6 +6,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import ru.heatrk.antivirus.data.api.AntivirusApi
+import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.data.models.ScannerCacheData
 import ru.heatrk.antivirus.domain.models.ScanState
 import ru.heatrk.antivirus.domain.models.ScannerEntryStatus
@@ -38,6 +39,10 @@ class MessagingRepositoryImpl(
 
     override suspend fun resumeScan() = withContext(ioDispatcher) {
         antivirusApi.resumeScan()
+    }
+
+    override suspend fun stopScan() = withContext(ioDispatcher) {
+        antivirusApi.stopScan()
     }
 
     @OptIn(FlowPreview::class)
