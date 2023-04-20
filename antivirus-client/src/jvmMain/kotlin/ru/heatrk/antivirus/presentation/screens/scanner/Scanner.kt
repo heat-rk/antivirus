@@ -10,8 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.window.rememberWindowState
 import ru.heatrk.antivirus.presentation.dialogs.FileDialog
+import ru.heatrk.antivirus.presentation.dialogs.MessageDialog
 import ru.heatrk.antivirus.presentation.values.dimens.ElementsDimens
 import ru.heatrk.antivirus.presentation.values.dimens.InsetsDimens
 import ru.heatrk.antivirus.presentation.values.images.Drawables
@@ -65,6 +65,11 @@ private fun ScannerVirusesDetected(
             onIntent(ScannerIntent.HideFileSelectionDialog)
         }
     }
+
+    MessageDialog(
+        messageDialogState = state.messageDialogState,
+        onDismiss = { onIntent(ScannerIntent.MessageDialogDismiss) }
+    )
 
     Surface(
         shape = ApplicationTheme.shapes.medium,
@@ -130,6 +135,11 @@ private fun ScannerIdle(
         }
     }
 
+    MessageDialog(
+        messageDialogState = state.messageDialogState,
+        onDismiss = { onIntent(ScannerIntent.MessageDialogDismiss) }
+    )
+
     Surface(
         shape = ApplicationTheme.shapes.medium,
         modifier = modifier
@@ -175,6 +185,11 @@ private fun ScannerRunning(
     onIntent: (ScannerIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    MessageDialog(
+        messageDialogState = state.messageDialogState,
+        onDismiss = { onIntent(ScannerIntent.MessageDialogDismiss) }
+    )
+
     Surface(
         shape = ApplicationTheme.shapes.medium,
         modifier = modifier

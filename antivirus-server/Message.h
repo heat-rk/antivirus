@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 #include "Serializable.h"
 
@@ -16,9 +17,8 @@ namespace Antivirus {
 				byteBuffer->getChars(message.uuid, sizeof(message.uuid));
 				message.timestamp = byteBuffer->getInt64();
 				message.status = byteBuffer->getInt8();
-				message.bodySize = byteBuffer->getInt32();
-				message.body = new int8_t[message.bodySize];
-				byteBuffer->getInt8(message.body, message.bodySize);
+				int32_t bodySize = byteBuffer->getInt32();
+				byteBuffer->getInt8(&message.body, bodySize);
 				return message;
 			}
 		};
@@ -27,16 +27,14 @@ namespace Antivirus {
 		char uuid[37] = { 0 };
 		int64_t timestamp;
 		int8_t status;
-		int32_t bodySize;
-		int8_t* body;
+		std::vector<int8_t> body;
 
 		virtual void write(ByteBuffer* byteBuffer) override {
 			byteBuffer->put(method, sizeof(method));
 			byteBuffer->put(uuid, sizeof(uuid));
 			byteBuffer->put(timestamp);
 			byteBuffer->put(status);
-			byteBuffer->put(bodySize);
-			byteBuffer->put(body, bodySize);
+			byteBuffer->put(body);
 		}
 	};
 

@@ -32,6 +32,7 @@ interface StringsContainer {
     val stop: String
     val resume: String
     val more: String
+    val ellipsis: String
 
     val selectFilesToScan: String
 

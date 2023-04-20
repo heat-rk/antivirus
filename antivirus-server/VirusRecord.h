@@ -4,6 +4,7 @@
 #include "Serializable.h"
 
 #include <cstdint>
+#include <string>
 
 namespace Antivirus {
 	class VirusRecord : public Serializable {
@@ -12,22 +13,24 @@ namespace Antivirus {
 		public:
 			virtual VirusRecord create(ByteBuffer* byteBuffer) const override {
 				VirusRecord record;
-				record.nameLength = byteBuffer->getInt8();
-				byteBuffer->getChars(record.name, record.nameLength);
+				int8_t nameLength = byteBuffer->getInt8();
+				char* name = new char[nameLength];
+				byteBuffer->getChars(name, nameLength);
+				record.name = std::string(name);
+				delete[] name;
 				record.type = byteBuffer->getInt8();
 				record.signature = virusSignatureDeserializer.create(byteBuffer);
 				return record;
 			}
 		};
 
-		int8_t nameLength;
-		char* name;
+		std::string name;
 		int8_t type;
 		VirusSignature signature;
 
 		virtual void write(ByteBuffer* byteBuffer) override {
-			byteBuffer->put(nameLength);
-			byteBuffer->put(name, nameLength);
+			byteBuffer->put((int8_t) name.size());
+			byteBuffer->put((wchar_t*) name.c_str(), (int8_t) name.size());
 			byteBuffer->put(type);
 			signature.write(byteBuffer);
 		}

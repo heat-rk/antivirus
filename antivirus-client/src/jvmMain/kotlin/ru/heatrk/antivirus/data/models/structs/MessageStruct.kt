@@ -1,7 +1,7 @@
 package ru.heatrk.antivirus.data.models.structs
 
 import com.sun.jna.Native
-import java.nio.ByteBuffer
+import ru.heatrk.antivirus.utils.DynamicByteBuffer
 import java.util.UUID
 
 class MessageStruct : SerializableStruct() {
@@ -15,7 +15,7 @@ class MessageStruct : SerializableStruct() {
     fun isUuidEquals(other: MessageStruct) =
         uuid.contentEquals(other.uuid) && method.contentEquals(other.method)
 
-    override fun write(byteBuffer: ByteBuffer) {
+    override fun write(byteBuffer: DynamicByteBuffer) {
         byteBuffer.put(method)
         byteBuffer.put(uuid)
         byteBuffer.putLong(timestamp)
@@ -56,12 +56,12 @@ class MessageStruct : SerializableStruct() {
 
 
     companion object : Deserializer<MessageStruct>() {
-        override fun create(byteBuffer: ByteBuffer) = MessageStruct().apply {
+        override fun create(byteBuffer: DynamicByteBuffer) = MessageStruct().apply {
             byteBuffer.get(method)
             byteBuffer.get(uuid)
-            timestamp = byteBuffer.long
+            timestamp = byteBuffer.getLong()
             status = byteBuffer.get()
-            bodySize = byteBuffer.int
+            bodySize = byteBuffer.getInt()
             body = ByteArray(bodySize)
             byteBuffer.get(body)
         }

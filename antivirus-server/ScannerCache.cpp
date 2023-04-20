@@ -2,8 +2,8 @@
 #include "AppDataProvider.h"
 #include "ByteBuffer.h"
 #include "LogWriter.h"
+#include "ScannerConstants.h"
 
-#include <fstream>
 #include <Windows.h>
 #include <stdio.h>
 #include <filesystem>
@@ -12,37 +12,40 @@
 
 using namespace Antivirus;
 
-void ScannerCache::save(std::vector<std::wstring> viruses) {
-    wchar_t* appdataPath;
-    appdataDirectory(&appdataPath);
-    wcscat_s(appdataPath, MAX_PATH, SCANNER_DATA_FILE_NAME);
+ScannerCache::ScannerCache() {
+    appdataDirectory(&m_scannerDataFilePath);
+    wcscat_s(m_scannerDataFilePath, MAX_PATH, SCANNER_DATA_FILE_NAME);
+}
 
+ScannerCache::~ScannerCache() {
+    delete[] m_scannerDataFilePath;
+}
+
+void ScannerCache::save(
+    std::vector<std::wstring> all,
+    std::vector<int8_t> statuses,
+    int8_t scannerStatus
+) {
     std::fstream scannerDataFile;
+
     scannerDataFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
     try {
-        scannerDataFile.open(appdataPath, std::ios::out | std::ios::binary);
-    } catch (std::system_error& e) {
+        scannerDataFile.open(m_scannerDataFilePath, std::ios::out | std::ios::binary | std::ios::trunc);
+    }
+    catch (std::system_error& e) {
         LogWriter::log("%s\n", e.code().message().c_str());
     }
 
-    if (!scannerDataFile.is_open()) {
-        char message[] = "Scanner:ScannerCache: Scanner cache file can't be opened\n";
-        LogWriter::log(message);
-        return;
-    }
+    ByteBuffer byteBuffer(0);
 
-    int32_t size = 0;
+    byteBuffer.put(scannerStatus);
 
-    for (int i = 0; i < viruses.size(); i++) {
-        size += sizeof(int32_t) + viruses[i].size() + 1;
-    }
-
-    ByteBuffer byteBuffer(size);
-
-    for (int i = 0; i < viruses.size(); i++) {
-        byteBuffer.put((int32_t)viruses[i].size() + 1);
-        byteBuffer.put((wchar_t*)viruses[i].c_str(), viruses[i].size() + 1);
+    for (int i = 0; i < all.size(); i++) {
+        int32_t entrySize = (int32_t)(all[i].size() + sizeof(wchar_t));
+        byteBuffer.put(statuses[i]);
+        byteBuffer.put(entrySize);
+        byteBuffer.put((wchar_t*)all[i].c_str(), entrySize);
     }
 
     char* bytes = new char[byteBuffer.size()];
@@ -50,54 +53,5 @@ void ScannerCache::save(std::vector<std::wstring> viruses) {
 
     scannerDataFile.write(bytes, byteBuffer.size());
 
-    CoTaskMemFree(appdataPath);
-    scannerDataFile.close();
-    delete bytes;
-}
-
-void ScannerCache::load(std::vector<std::wstring>* dest) {
-    wchar_t* appdataPath;
-    appdataDirectory(&appdataPath);
-    wcscat_s(appdataPath, MAX_PATH, SCANNER_DATA_FILE_NAME);
-
-    std::fstream scannerDataFile;
-    scannerDataFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try {
-        scannerDataFile.open(appdataPath, std::ios::in | std::ios::binary);
-    }
-    catch (std::system_error& e) {
-        LogWriter::log("ScannerCache:Load: Error while opening cache file (code = %d, meaning = %s)\n", e.code(), e.what());
-        CoTaskMemFree(appdataPath);
-        return;
-    }
-
-    if (!scannerDataFile.is_open()) {
-        LogWriter::log("ScannerCache:Load: Scanner cache file can't be opened\n");
-        CoTaskMemFree(appdataPath);
-        return;
-    }
-
-    ByteBuffer byteBuffer;
-    char pathLengthBytesBuffer[sizeof(int32_t)];
-    int32_t pathLength;
-    char* pathBytesBuffer;
-    wchar_t* pathBuffer;
-
-    while (scannerDataFile.peek() != EOF) {
-        scannerDataFile.read(pathLengthBytesBuffer, sizeof(pathLengthBytesBuffer));
-        byteBuffer.put(pathLengthBytesBuffer, sizeof(pathLengthBytesBuffer));
-        pathLength = byteBuffer.getInt32();
-        pathBytesBuffer = new char[pathLength];
-        scannerDataFile.read(pathBytesBuffer, pathLength);
-        byteBuffer.put(pathBytesBuffer, pathLength);
-        pathBuffer = new wchar_t[pathLength];
-        byteBuffer.getWChars(pathBuffer, pathLength);
-        dest->push_back(std::wstring(pathBuffer));
-        delete pathBytesBuffer;
-        delete pathBuffer;
-    }
-
-    CoTaskMemFree(appdataPath);
-    scannerDataFile.close();
+    delete[] bytes;
 }

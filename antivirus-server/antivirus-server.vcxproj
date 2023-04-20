@@ -175,6 +175,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -186,6 +187,8 @@
   <ItemGroup>
     <ClCompile Include="AppDataProvider.cpp" />
     <ClCompile Include="ByteBuffer.cpp" />
+    <ClCompile Include="ChannelClient.cpp" />
+    <ClCompile Include="ChannelCore.cpp" />
     <ClCompile Include="LogWriter.cpp" />
     <ClCompile Include="LogReader.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -195,13 +198,14 @@
     <ClCompile Include="ServiceManager.cpp" />
     <ClCompile Include="Sha256.cpp" />
     <ClCompile Include="SignatureBaseFile.cpp" />
-    <ClCompile Include="StatusNotifier.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppDataProvider.h" />
     <ClInclude Include="ByteBuffer.h" />
     <ClInclude Include="Channel.h" />
+    <ClInclude Include="ChannelClient.h" />
+    <ClInclude Include="ChannelCore.h" />
     <ClInclude Include="IncomingMessageBodyScan.h" />
     <ClInclude Include="LogConstants.h" />
     <ClInclude Include="LogWriter.h" />
@@ -209,16 +213,13 @@
     <ClInclude Include="OutgoingMessageBodyError.h" />
     <ClInclude Include="MessageStatus.h" />
     <ClInclude Include="MessageMethod.h" />
-    <ClInclude Include="OutgoingMessageBodyScan.h" />
-    <ClInclude Include="OutgoingMessageBodyScanLast.h" />
     <ClInclude Include="Scanner.h" />
-    <ClInclude Include="OutgoingMessageBodyStatus.h" />
     <ClInclude Include="ScannerCache.h" />
+    <ClInclude Include="ScannerConstants.h" />
     <ClInclude Include="Serializable.h" />
     <ClInclude Include="ServiceManager.h" />
     <ClInclude Include="Sha256.h" />
     <ClInclude Include="SignatureBaseFile.h" />
-    <ClInclude Include="StatusNotifier.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VirusFileTypes.h" />

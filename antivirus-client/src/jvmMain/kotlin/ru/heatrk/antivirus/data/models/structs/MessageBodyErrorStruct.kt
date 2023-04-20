@@ -1,11 +1,11 @@
 package ru.heatrk.antivirus.data.models.structs
 
-import java.nio.ByteBuffer
+import ru.heatrk.antivirus.utils.DynamicByteBuffer
 
 class MessageBodyErrorStruct : SerializableStruct() {
     val message = ByteArray(64)
 
-    override fun write(byteBuffer: ByteBuffer) {
+    override fun write(byteBuffer: DynamicByteBuffer) {
         byteBuffer.put(message)
     }
 
@@ -29,7 +29,7 @@ class MessageBodyErrorStruct : SerializableStruct() {
     }
 
     companion object : Deserializer<MessageBodyErrorStruct>() {
-        override fun create(byteBuffer: ByteBuffer) = MessageBodyErrorStruct().apply {
+        override fun create(byteBuffer: DynamicByteBuffer) = MessageBodyErrorStruct().apply {
             byteBuffer.get(message)
         }
     }

@@ -3,7 +3,7 @@ package ru.heatrk.antivirus.presentation.screens.antivirus_root
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
 
 sealed interface AntivirusRootIntent {
-    object DialogDismiss : AntivirusRootIntent
+    object MessageDialogDismiss : AntivirusRootIntent
     object Reload : AntivirusRootIntent
 }
 

@@ -5,17 +5,24 @@
 #include "AppDataProvider.h"
 #include "LogWriter.h"
 
-#define APP_LOCAL_DIRECTORY L"\\BVT2001 Antivirus\\"
+#define APP_DIRECTORY_NAME L"\\BVT2001 Antivirus\\"
+
+static wchar_t* cachedPath;
 
 int Antivirus::appdataDirectory(wchar_t** path) {
-    HRESULT result = SHGetKnownFolderPath(FOLDERID_ProgramData, 0, NULL, path);
+    if (cachedPath == NULL) {
+        HRESULT result = SHGetKnownFolderPath(FOLDERID_ProgramData, 0, NULL, &cachedPath);
 
-    if (result != S_OK) {
-        LogWriter::log("Failed to get local appdata path\n");
-        return 1;
+        if (result != S_OK) {
+            LogWriter::log("Failed to get local appdata path\n");
+            return 1;
+        }
+
+        wcscat_s(cachedPath, MAX_PATH, APP_DIRECTORY_NAME);
     }
 
-    wcscat_s(*path, MAX_PATH, APP_LOCAL_DIRECTORY);
+    *path = new wchar_t[MAX_PATH];
+    wcscpy_s(*path, MAX_PATH, cachedPath);
 
     return 0;
 }

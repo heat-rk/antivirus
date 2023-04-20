@@ -86,7 +86,7 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 
 	m_file.seekp(0, std::ios::end);
 
-	ByteBuffer byteBuffer(virusSignatureSize + record.nameLength + sizeof(uint8_t));
+	ByteBuffer byteBuffer(virusSignatureSize + record.name.size() + sizeof(uint8_t));
 	record.write(&byteBuffer);
 
 	char* bytes = new char[byteBuffer.size()];
@@ -154,24 +154,26 @@ bool SignatureBaseFileReader::readRecord(VirusRecord* record) {
 	if (record == NULL || !m_file.is_open()) return false;
 
 	ByteBuffer byteBuffer(sizeof(int8_t));
-	char nameLength[sizeof(int8_t)];
-	m_file.read(nameLength, sizeof(nameLength));
-	byteBuffer.put(nameLength, sizeof(int8_t));
-	record->nameLength = byteBuffer.getInt8();
+	char nameLengthBytes[sizeof(int8_t)];
+	m_file.read(nameLengthBytes, sizeof(nameLengthBytes));
+	byteBuffer.put(nameLengthBytes, sizeof(int8_t));
+	int8_t nameLength = byteBuffer.getInt8();
 
 	byteBuffer.clear();
-	byteBuffer.resize(virusSignatureSize + record->nameLength + sizeof(int8_t));
+	byteBuffer.resize(virusSignatureSize + nameLength + sizeof(int8_t));
 
 	char* bytes = new char[byteBuffer.size()];
 	m_file.read(bytes, byteBuffer.size());
 	byteBuffer.put(bytes, byteBuffer.size());
 
-	record->name = new char[record->nameLength];
-	byteBuffer.getChars(record->name, record->nameLength);
+	char* name = new char[nameLength];
+	byteBuffer.getChars(name, nameLength);
+	record->name = std::string(name);
+	delete[] name;
 	record->type = byteBuffer.getInt8();
 	record->signature = virusSignatureDeserializer.create(&byteBuffer);
 
-	delete bytes;
+	delete[] bytes;
 
 	return true;
 }

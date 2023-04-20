@@ -27,6 +27,7 @@ object StringContainerRu: StringsContainer {
     override val stop = "Остановить"
     override val resume = "Продолжить"
     override val more = "Подробнее"
+    override val ellipsis = "..."
 
     override val selectFilesToScan = "Выберите файлы для сканирования"
 

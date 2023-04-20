@@ -8,7 +8,7 @@ namespace Antivirus {
 	private:
 		static HANDLE m_pipe;
 
-		static void openPipe();
+		static bool openPipe();
 	public:
 		static void log(const wchar_t* format, ...);
 		static void log(const char* format, ...);

@@ -1,18 +1,18 @@
 package ru.heatrk.antivirus.data.models.structs
 
-import java.nio.ByteBuffer
+import ru.heatrk.antivirus.utils.DynamicByteBuffer
 
 abstract class SerializableStruct {
 
     fun write(bytes: ByteArray) {
-        write(ByteBuffer.wrap(bytes))
+        write(DynamicByteBuffer(bytes))
     }
 
-    abstract fun write(byteBuffer: ByteBuffer)
+    abstract fun write(byteBuffer: DynamicByteBuffer)
 
     abstract class Deserializer<T: SerializableStruct> {
-        fun create(bytes: ByteArray): T = create(ByteBuffer.wrap(bytes))
+        fun create(bytes: ByteArray): T = create(DynamicByteBuffer(bytes))
 
-        abstract fun create(byteBuffer: ByteBuffer): T
+        abstract fun create(byteBuffer: DynamicByteBuffer): T
     }
 }

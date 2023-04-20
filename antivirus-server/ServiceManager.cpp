@@ -441,7 +441,7 @@ int ServiceManager::stopService() {
 int ServiceManager::loadBaseInput(wchar_t* path) {
     SignatureBaseFileWriter baseWriter;
 
-    wchar_t* appdataPath;
+    wchar_t* appdataPath = NULL;
     appdataDirectory(&appdataPath);
     
     if (!CreateDirectory(appdataPath, NULL) &&
@@ -453,7 +453,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     wcscat_s(appdataPath, MAX_PATH, BASE_FILE_NAME);
     baseWriter.open(appdataPath, true);
 
-    ifstream file;
+    std::ifstream file;
     file.open(path);
     
     VirusSignature signature;
@@ -474,7 +474,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
 
         getline(file, line);
         signatureBytes = new int8_t[signature.length];
-        stringstream signatureBytesStream(line);
+        std::stringstream signatureBytesStream(line);
 
         i = 0;
 
@@ -484,16 +484,13 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
 
         sha256.update(signatureBytes, signature.length);
         hash = sha256.digest();
-        copy(hash, hash + HASH_SIZE, signature.hash);
+        std::copy(hash, hash + HASH_SIZE, signature.hash);
 
         firstBytesBuffer.put(signatureBytes, firstBytesBuffer.size());
         signature.first = firstBytesBuffer.getInt64();
 
         getline(file, line);
-        record.nameLength = toInt8(line);
-
-        getline(file, line);
-        record.name = (char*) line.c_str();
+        record.name = line;
 
         record.signature = signature;
         baseWriter.addRecord(record);
@@ -508,7 +505,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     }
 
     baseWriter.close();
-    CoTaskMemFree(appdataPath);
+    delete[] appdataPath;
 
     return 0;
 }
@@ -517,11 +514,13 @@ int ServiceManager::scan(wchar_t* path) {
     Scanner scanner;
     SignatureBaseFileReader baseReader;
 
-    wchar_t* appdataPath;
+    wchar_t* appdataPath = NULL;
     appdataDirectory(&appdataPath);
     wcscat_s(appdataPath, MAX_PATH, BASE_FILE_NAME);
 
     baseReader.open(appdataPath);
+
+    delete[] appdataPath;
 
     for (int i = 0; i < baseReader.getRecordsCount(); i++) {
         VirusRecord record;
@@ -532,8 +531,6 @@ int ServiceManager::scan(wchar_t* path) {
     baseReader.close();
 
     scanner.start(path);
-
-    CoTaskMemFree(appdataPath);
 
     return 0;
 }

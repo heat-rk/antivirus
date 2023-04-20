@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
+import ru.heatrk.antivirus.presentation.screens.ServiceStatus
 import ru.heatrk.antivirus.presentation.screens.ServiceStatusListener
 import ru.heatrk.antivirus.presentation.values.strings.strings
 
@@ -60,10 +61,10 @@ class ServiceControlComponent(
         }
     }
 
-    override fun onStatusLoading() = Unit
-
-    override fun onStatusReceived(isEnabled: Boolean) {
-        _state.value = ServiceControlViewState.Ok(isServiceEnabled = isEnabled)
+    override fun onStatusReceived(status: ServiceStatus) {
+        _state.value = ServiceControlViewState.Ok(
+            isServiceEnabled = status == ServiceStatus.ENABLED
+        )
     }
 
     data class Args(

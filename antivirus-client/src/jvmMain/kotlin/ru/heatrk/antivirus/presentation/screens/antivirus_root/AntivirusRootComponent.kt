@@ -14,6 +14,7 @@ import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
+import ru.heatrk.antivirus.presentation.screens.ServiceStatus
 import ru.heatrk.antivirus.presentation.screens.ServiceStatusListener
 import ru.heatrk.antivirus.presentation.screens.scanner.ScannerComponent
 import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlComponent
@@ -51,7 +52,7 @@ class AntivirusRootComponent(
 
     fun onIntent(intent: AntivirusRootIntent) = componentScope.launch {
         when (intent) {
-            AntivirusRootIntent.DialogDismiss -> {
+            AntivirusRootIntent.MessageDialogDismiss -> {
                 val state = _state.value
 
                 if (state !is AntivirusRootViewState.Ok) {
@@ -73,7 +74,17 @@ class AntivirusRootComponent(
         when (val result = messagingRepository.isServiceEnabled()) {
             is ApiMessage.Ok -> {
                 _state.value = AntivirusRootViewState.Ok()
-                statusListeners.forEach { it.onStatusReceived(result.body) }
+
+                statusListeners.forEach {
+                    it.onStatusReceived(
+                        if (result.body) {
+                            ServiceStatus.ENABLED
+                        } else {
+                            ServiceStatus.DISABLED
+                        }
+                    )
+                }
+
                 initListeners()
             }
 
@@ -94,16 +105,15 @@ class AntivirusRootComponent(
 
         serviceControlComponent.serviceStartEvents
             .onEach {
-                statusListeners.forEach { it.onStatusLoading() }
+                statusListeners.forEach { it.onStatusReceived(ServiceStatus.LOADING) }
 
                 when (val result = messagingRepository.startService()) {
                     is ApiMessage.Ok -> {
-                        println(messagingRepository.getStatus())
-                        statusListeners.forEach { it.onStatusReceived(true) }
+                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.ENABLED) }
                     }
 
                     is ApiMessage.Fail -> {
-                        statusListeners.forEach { it.onStatusReceived(false) }
+                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.DISABLED) }
 
                         _state.value = AntivirusRootViewState.Ok(
                             messageDialogState = MessageDialogState.Error(
@@ -122,15 +132,15 @@ class AntivirusRootComponent(
 
         serviceControlComponent.serviceStopEvents
             .onEach {
-                statusListeners.forEach { it.onStatusLoading()}
+                statusListeners.forEach { it.onStatusReceived(ServiceStatus.LOADING)}
 
                 when (val result = messagingRepository.stopService()) {
                     is ApiMessage.Ok -> {
-                        statusListeners.forEach { it.onStatusReceived(false) }
+                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.DISABLED) }
                     }
 
                     is ApiMessage.Fail -> {
-                        statusListeners.forEach { it.onStatusReceived(true) }
+                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.ENABLED) }
 
                         _state.value = AntivirusRootViewState.Ok(
                             messageDialogState = MessageDialogState.Error(

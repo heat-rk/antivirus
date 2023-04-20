@@ -98,7 +98,7 @@ private fun AntivirusRootOkScreen(
 ) {
     MessageDialog(
         messageDialogState = state.messageDialogState,
-        onDismiss = { onIntent(AntivirusRootIntent.DialogDismiss) }
+        onDismiss = { onIntent(AntivirusRootIntent.MessageDialogDismiss) }
     )
 
     Column(

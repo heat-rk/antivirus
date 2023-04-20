@@ -26,9 +26,7 @@ Message Antivirus::generateMessage(
 
 	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	message.bodySize = byteBuffer.size();
-	message.body = new int8_t[message.bodySize];
-	byteBuffer.getInt8(message.body, byteBuffer.size());
+	byteBuffer.getInt8(&message.body, byteBuffer.size());
 
 	return message;
 }
@@ -47,9 +45,7 @@ Message Antivirus::generateMessage(
 
 	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	message.bodySize = byteBuffer.size();
-	message.body = new int8_t[message.bodySize];
-	byteBuffer.getInt8(message.body, byteBuffer.size());
+	byteBuffer.getInt8(&message.body, byteBuffer.size());
 
 	return message;
 }
