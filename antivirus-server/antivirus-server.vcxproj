@@ -185,6 +185,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\Desktop\Quarantine.cpp" />
+    <ClCompile Include="..\..\..\..\Desktop\testQuarantin.cpp" />
     <ClCompile Include="AppDataProvider.cpp" />
     <ClCompile Include="ByteBuffer.cpp" />
     <ClCompile Include="ChannelClient.cpp" />
@@ -201,6 +203,7 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\Desktop\Quarantine.h" />
     <ClInclude Include="AppDataProvider.h" />
     <ClInclude Include="ByteBuffer.h" />
     <ClInclude Include="Channel.h" />
