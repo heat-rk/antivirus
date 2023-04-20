@@ -156,8 +156,6 @@ void startServiceThreads() {
     if (WaitForSingleObject(g_ServiceStopEvent, INFINITE) == WAIT_FAILED) {
         LogWriter::log(L"AntivirusService: ServiceMain: Waiting for threads failed, GLE=%d\n", GetLastError());
     }
-
-    LogWriter::log(L"ldgldkfgd\n");
 }
 
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)

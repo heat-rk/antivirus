@@ -24,7 +24,7 @@ int ServiceManager::installService() {
 	SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
 
 	if (!hSCManager) {
-        LogWriter::log("Can't open Service Control Manager: %d\n", GetLastError());
+        LogWriter::log("ServiceManager: Can't open Service Control Manager: %d\n", GetLastError());
 		return -1;
 	}
 
@@ -41,7 +41,7 @@ int ServiceManager::installService() {
 	);
 
 	if (!hService) {
-        LogWriter::log("Can't create service: %d\n", GetLastError());
+        LogWriter::log("ServiceManager: Can't create service: %d\n", GetLastError());
 		CloseServiceHandle(hSCManager);
 		return -1;
 	}
@@ -49,7 +49,7 @@ int ServiceManager::installService() {
 	CloseServiceHandle(hService);
 	CloseServiceHandle(hSCManager);
 
-    LogWriter::log("Success install service!\n");
+    LogWriter::log("ServiceManager: Success install service!\n");
 
     return 0;
 }
@@ -62,7 +62,7 @@ int ServiceManager::uninstallService() {
 	SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 
 	if (!hSCManager) {
-        LogWriter::log("Can't open Service Control Manager: %d\n", GetLastError());
+        LogWriter::log("ServiceManager: Can't open Service Control Manager: %d\n", GetLastError());
 		return -1;
 	}
 
@@ -73,7 +73,7 @@ int ServiceManager::uninstallService() {
 	);
 
 	if (!hService) {
-        LogWriter::log("Can't remove service: %d\n", GetLastError());
+        LogWriter::log("ServiceManager: Can't remove service: %d\n", GetLastError());
 		CloseServiceHandle(hSCManager);
 		return -1;
 	}
@@ -82,7 +82,7 @@ int ServiceManager::uninstallService() {
 	CloseServiceHandle(hService);
 	CloseServiceHandle(hSCManager);
 
-    LogWriter::log("Success remove service!\n");
+    LogWriter::log("ServiceManager: Success remove service!\n");
 
     return 0;
 }
@@ -103,7 +103,7 @@ int ServiceManager::runService() {
     );  
 
     if (NULL == schSCManager) {
-        LogWriter::log("OpenSCManager failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: OpenSCManager failed (%d)\n", GetLastError());
         return -1;
     }
 
@@ -116,7 +116,7 @@ int ServiceManager::runService() {
     );
 
     if (schService == NULL) {
-        LogWriter::log("OpenService failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: OpenService failed (%d)\n", GetLastError());
         CloseServiceHandle(schSCManager);
         return -1;
     }
@@ -130,7 +130,7 @@ int ServiceManager::runService() {
         sizeof(SERVICE_STATUS_PROCESS), // size of structure
         &dwBytesNeeded)
     ) {
-        LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
@@ -140,7 +140,7 @@ int ServiceManager::runService() {
     // to stop the service here, but for simplicity this example just returns. 
 
     if (ssStatus.dwCurrentState != SERVICE_STOPPED && ssStatus.dwCurrentState != SERVICE_STOP_PENDING) {
-        LogWriter::log("Cannot start the service because it is already running\n");
+        LogWriter::log("ServiceManager: Cannot start the service because it is already running\n");
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return 0;
@@ -176,7 +176,7 @@ int ServiceManager::runService() {
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded)
         ) {
-            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
@@ -188,7 +188,7 @@ int ServiceManager::runService() {
             dwOldCheckPoint = ssStatus.dwCheckPoint;
         } else {
             if (GetTickCount() - dwStartTickCount > ssStatus.dwWaitHint) {
-                LogWriter::log("Timeout waiting for service to stop\n");
+                LogWriter::log("ServiceManager: Timeout waiting for service to stop\n");
                 CloseServiceHandle(schService);
                 CloseServiceHandle(schSCManager);
                 return -1;
@@ -202,13 +202,13 @@ int ServiceManager::runService() {
         0,           // number of arguments 
         NULL)
     ) {
-        LogWriter::log("StartService failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: StartService failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
     }
     else {
-        LogWriter::log("Service start pending...\n");
+        LogWriter::log("ServiceManager: Service start pending...\n");
     }
 
     // Check the status until the service is no longer start pending. 
@@ -220,7 +220,7 @@ int ServiceManager::runService() {
         sizeof(SERVICE_STATUS_PROCESS), // size of structure
         &dwBytesNeeded)
     ) {
-        LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
@@ -254,7 +254,7 @@ int ServiceManager::runService() {
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded)
         ) {
-            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
             break;
         }
 
@@ -273,9 +273,9 @@ int ServiceManager::runService() {
     // Determine whether the service is running.
 
     if (ssStatus.dwCurrentState == SERVICE_RUNNING) {
-        LogWriter::log("Service started successfully.\n");
+        LogWriter::log("ServiceManager: Service started successfully.\n");
     } else {
-        LogWriter::log("Service not started. \n");
+        LogWriter::log("ServiceManager: Service not started. \n");
         LogWriter::log("  Current State: %d\n", ssStatus.dwCurrentState);
         LogWriter::log("  Exit Code: %d\n", ssStatus.dwWin32ExitCode);
         LogWriter::log("  Check Point: %d\n", ssStatus.dwCheckPoint);
@@ -304,7 +304,7 @@ int ServiceManager::stopService() {
     );
 
     if (NULL == schSCManager) {
-        LogWriter::log("OpenSCManager failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: OpenSCManager failed (%d)\n", GetLastError());
         return -1;
     }
 
@@ -318,7 +318,7 @@ int ServiceManager::stopService() {
     );
 
     if (schService == NULL) {
-        LogWriter::log("OpenService failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: OpenService failed (%d)\n", GetLastError());
         CloseServiceHandle(schSCManager);
         return -1;
     }
@@ -332,14 +332,14 @@ int ServiceManager::stopService() {
         sizeof(SERVICE_STATUS_PROCESS),
         &dwBytesNeeded)
     ) {
-        LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
     }
 
     if (ssp.dwCurrentState == SERVICE_STOPPED) {
-        LogWriter::log("Service is already stopped.\n");
+        LogWriter::log("ServiceManager: Service is already stopped.\n");
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return 0;
@@ -348,7 +348,7 @@ int ServiceManager::stopService() {
     // If a stop is pending, wait for it.
 
     while (ssp.dwCurrentState == SERVICE_STOP_PENDING) {
-        LogWriter::log("Service stop pending...\n");
+        LogWriter::log("ServiceManager: Service stop pending...\n");
 
         // Do not wait longer than the wait hint. A good interval is 
         // one-tenth of the wait hint but not less than 1 second  
@@ -370,21 +370,21 @@ int ServiceManager::stopService() {
             sizeof(SERVICE_STATUS_PROCESS),
             &dwBytesNeeded)
         ) {
-            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
         }
 
         if (ssp.dwCurrentState == SERVICE_STOPPED) {
-            LogWriter::log("Service stopped successfully.\n");
+            LogWriter::log("ServiceManager: Service stopped successfully.\n");
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
         }
 
         if (GetTickCount() - dwStartTime > dwTimeout) {
-            LogWriter::log("Service stop timed out.\n");
+            LogWriter::log("ServiceManager: Service stop timed out.\n");
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
@@ -398,7 +398,7 @@ int ServiceManager::stopService() {
         SERVICE_CONTROL_STOP,
         (LPSERVICE_STATUS)&ssp)
     ) {
-        LogWriter::log("ControlService failed (%d)\n", GetLastError());
+        LogWriter::log("ServiceManager: ControlService failed (%d)\n", GetLastError());
         CloseServiceHandle(schService);
         CloseServiceHandle(schSCManager);
         return -1;
@@ -416,7 +416,7 @@ int ServiceManager::stopService() {
             sizeof(SERVICE_STATUS_PROCESS),
             &dwBytesNeeded)
         ) {
-            LogWriter::log("QueryServiceStatusEx failed (%d)\n", GetLastError());
+            LogWriter::log("ServiceManager: QueryServiceStatusEx failed (%d)\n", GetLastError());
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
@@ -426,14 +426,14 @@ int ServiceManager::stopService() {
             break;
 
         if (GetTickCount() - dwStartTime > dwTimeout) {
-            LogWriter::log("Wait timed out\n");
+            LogWriter::log("ServiceManager: Wait timed out\n");
             CloseServiceHandle(schService);
             CloseServiceHandle(schSCManager);
             return -1;
         }
     }
 
-    LogWriter::log("Service stopped successfully\n");
+    LogWriter::log("ServiceManager: Service stopped successfully\n");
 
     return 0;
 }
@@ -446,7 +446,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     
     if (!CreateDirectory(appdataPath, NULL) &&
         ERROR_ALREADY_EXISTS != GetLastError()) {
-        LogWriter::log("Error creating app data directory (GLE = %d)\n", GetLastError());
+        LogWriter::log("ServiceManager: Error creating app data directory (GLE = %d)\n", GetLastError());
         return 1;
     }
 
@@ -454,7 +454,16 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     baseWriter.open(appdataPath, true);
 
     std::ifstream file;
-    file.open(path);
+
+    file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try {
+        file.open(path);
+    }
+    catch (std::system_error& e) {
+        LogWriter::log("ServiceManager: %s\n", e.code().message().c_str());
+        return 1;
+    }
     
     VirusSignature signature;
     VirusRecord record;
@@ -493,13 +502,18 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
         record.name = line;
 
         record.signature = signature;
-        baseWriter.addRecord(record);
 
         delete signatureBytes;
 
         getline(file, line);
+        record.type = toInt8(line);
+
+        baseWriter.addRecord(record);
+
+        getline(file, line);
 
         if (line.compare(";") != 0) {
+            LogWriter::log(L"ServiceManager: Viruses base file not ending with \";\"!\n");
             break;
         }
     }

@@ -6,6 +6,7 @@
 #include "MessageStatus.h"
 #include "LogWriter.h"
 #include "ScannerConstants.h"
+#include "VirusFileTypes.h"
 
 #include <stdio.h>
 #include <filesystem>
@@ -89,6 +90,7 @@ void Scanner::start(wchar_t* path) {
     const wchar_t* entry;
     uint64_t length;
     char* bytes;
+    int8_t type;
 
     for (int i = 0; i < m_entries.size(); i++) {
         entry = m_entries[i].c_str();
@@ -111,6 +113,32 @@ void Scanner::start(wchar_t* path) {
         file->close();
         delete file;
 
+        type = typeOf((int8_t*) bytes, length);
+
+        bool typeSupported = false;
+
+        for (auto supportedType : FileType::SUPPORTED) {
+            if (supportedType == type) {
+                typeSupported = true;
+            }
+        }
+
+        if (!typeSupported) {
+            m_statuses[i] = SCANNED_NOT_INFECTED;
+
+            LogWriter::log(
+                L"Scanner: %ls - %ls!\n",
+                m_entries[i].c_str(),
+                L"Not infected"
+            );
+
+            delete[] bytes;
+
+            updateStatus(SCANNING);
+
+            continue;
+        }
+
         for (
             uint64_t offset = 0;
             offset + sizeof(int64_t) - 1 < length && m_statuses[i] == NOT_SCANNED;
@@ -126,7 +154,7 @@ void Scanner::start(wchar_t* path) {
                 if (length < sizeof(int64_t)) {
                     status = SCANNED_NOT_INFECTED;
                 }
-                else if (scan((int8_t*)bytes, length, offset)) {
+                else if (scan((int8_t*)bytes, length, offset, type)) {
                     status = SCANNED_INFECTED;
                 }
                 else if (offset >= length - sizeof(int64_t)) {
@@ -172,7 +200,7 @@ void Scanner::stop() {
     SetEvent(m_resumeEvent);
 }
 
-bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset) {
+bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset, int8_t type) {
     m_firstBytesBuffer.clear();
     m_firstBytesBuffer.put(bytes + offset, sizeof(int64_t));
     int64_t first = m_firstBytesBuffer.getInt64();
@@ -187,6 +215,10 @@ bool Scanner::scan(int8_t* bytes, uint64_t length, uint64_t offset) {
 
     for (int i = 0; i < pos->second.size(); i++) {
         record = pos->second[i];
+
+        if (record.type != type) {
+            continue;
+        }
 
         if (record.signature.offset != offset) {
             continue;
@@ -246,4 +278,13 @@ void Scanner::updateStatus(int8_t status, bool force) {
     }
 
     m_cache.save(m_entries, m_statuses, m_scanStatus);
+}
+
+int8_t Scanner::typeOf(int8_t* bytes, uint64_t length) {
+    // MZ
+    if (length > 1 && bytes[0] == 77 && bytes[1] == 90) {
+        return FileType::E_MZ;
+    }
+
+    return FileType::E_UNKNOWN;
 }

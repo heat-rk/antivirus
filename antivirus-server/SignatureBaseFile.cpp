@@ -86,7 +86,7 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 
 	m_file.seekp(0, std::ios::end);
 
-	ByteBuffer byteBuffer(virusSignatureSize + record.name.size() + sizeof(uint8_t));
+	ByteBuffer byteBuffer(0);
 	record.write(&byteBuffer);
 
 	char* bytes = new char[byteBuffer.size()];

@@ -30,7 +30,7 @@ namespace Antivirus {
 
 		virtual void write(ByteBuffer* byteBuffer) override {
 			byteBuffer->put((int8_t) name.size());
-			byteBuffer->put((wchar_t*) name.c_str(), (int8_t) name.size());
+			byteBuffer->put((char*) name.c_str(), (int8_t) name.size());
 			byteBuffer->put(type);
 			signature.write(byteBuffer);
 		}

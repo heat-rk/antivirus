@@ -71,8 +71,14 @@ class ScannerComponent(
                     .find { it.second == ScannerEntryStatus.NOT_SCANNED }
                     ?.first ?: strings.ellipsis
 
+                val progress = if (scanState.entries.isNotEmpty()) {
+                    scanned / scanState.entries.size.toFloat()
+                } else {
+                    0f
+                }
+
                 updateRunningState(
-                    progress = scanned / scanState.entries.size.toFloat(),
+                    progress = progress,
                     scanningPath = scanningPath,
                     virusesDetected = virusesCount,
                     isPaused = scanState.isPaused
