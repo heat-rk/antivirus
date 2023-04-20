@@ -185,8 +185,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Desktop\Quarantine.cpp" />
-    <ClCompile Include="..\..\..\..\Desktop\testQuarantin.cpp" />
     <ClCompile Include="AppDataProvider.cpp" />
     <ClCompile Include="ByteBuffer.cpp" />
     <ClCompile Include="ChannelClient.cpp" />
@@ -195,20 +193,22 @@
     <ClCompile Include="LogReader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Channel.cpp" />
+    <ClCompile Include="quarantine.cpp" />
     <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="ScannerCache.cpp" />
     <ClCompile Include="ServiceManager.cpp" />
     <ClCompile Include="Sha256.cpp" />
     <ClCompile Include="SignatureBaseFile.cpp" />
+    <ClCompile Include="testQuarantine.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Desktop\Quarantine.h" />
     <ClInclude Include="AppDataProvider.h" />
     <ClInclude Include="ByteBuffer.h" />
     <ClInclude Include="Channel.h" />
     <ClInclude Include="ChannelClient.h" />
     <ClInclude Include="ChannelCore.h" />
+    <ClInclude Include="Quarantine.h" />
     <ClInclude Include="IncomingMessageBodyScan.h" />
     <ClInclude Include="LogConstants.h" />
     <ClInclude Include="LogWriter.h" />

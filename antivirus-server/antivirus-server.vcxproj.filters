@@ -55,8 +55,8 @@
     <Filter Include="Исходные файлы\core\logger">
       <UniqueIdentifier>{4ff00adb-966c-43c0-8483-4c400b13719d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Исходные файлы\app\quarantin">
-      <UniqueIdentifier>{bc4233b5-b005-498b-b278-acb094350fe8}</UniqueIdentifier>
+    <Filter Include="Исходные файлы\app\quaranine">
+      <UniqueIdentifier>{21fe5a92-e122-4dca-ba79-c2d8870bd3fc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,11 +102,11 @@
     <ClCompile Include="ChannelCore.cpp">
       <Filter>Исходные файлы\core\ipc</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Desktop\Quarantine.cpp">
-      <Filter>Исходные файлы\app\quarantin</Filter>
+    <ClCompile Include="quarantine.cpp">
+      <Filter>Исходные файлы\app\quaranine</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Desktop\testQuarantin.cpp">
-      <Filter>Исходные файлы\app\quarantin</Filter>
+    <ClCompile Include="testQuarantine.cpp">
+      <Filter>Исходные файлы\app\quaranine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -182,8 +182,8 @@
     <ClInclude Include="ChannelCore.h">
       <Filter>Исходные файлы\core\ipc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Desktop\Quarantine.h">
-      <Filter>Исходные файлы\app\quarantin</Filter>
+    <ClInclude Include="Quarantine.h">
+      <Filter>Исходные файлы\app\quaranine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
