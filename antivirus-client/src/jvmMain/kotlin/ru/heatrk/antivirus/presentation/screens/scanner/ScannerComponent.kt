@@ -159,7 +159,12 @@ class ScannerComponent(
         _state.value = if (state is ScannerViewState.Idle) {
             state.copy(isEnabled = isEnabled)
         } else {
-            ScannerViewState.Idle(isEnabled = isEnabled)
+            val showAllOkMessage = state is ScannerViewState.Running
+
+            ScannerViewState.Idle(
+                isEnabled = isEnabled,
+                showAllOkMessage = showAllOkMessage
+            )
         }
     }
 

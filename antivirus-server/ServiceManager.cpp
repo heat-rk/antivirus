@@ -441,17 +441,16 @@ int ServiceManager::stopService() {
 int ServiceManager::loadBaseInput(wchar_t* path) {
     SignatureBaseFileWriter baseWriter;
 
-    wchar_t* appdataPath = NULL;
-    appdataDirectory(&appdataPath);
+    std::wstring appdataPath = appdataDirectory();
     
-    if (!CreateDirectory(appdataPath, NULL) &&
+    if (!CreateDirectory(appdataPath.c_str(), NULL) &&
         ERROR_ALREADY_EXISTS != GetLastError()) {
         LogWriter::log("ServiceManager: Error creating app data directory (GLE = %d)\n", GetLastError());
         return 1;
     }
 
-    wcscat_s(appdataPath, MAX_PATH, BASE_FILE_NAME);
-    baseWriter.open(appdataPath, true);
+    appdataPath += BASE_FILE_NAME;
+    baseWriter.open((wchar_t*) appdataPath.c_str(), true);
 
     std::ifstream file;
 
@@ -503,7 +502,7 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
 
         record.signature = signature;
 
-        delete signatureBytes;
+        delete[] signatureBytes;
 
         getline(file, line);
         record.type = toInt8(line);
@@ -519,7 +518,6 @@ int ServiceManager::loadBaseInput(wchar_t* path) {
     }
 
     baseWriter.close();
-    delete[] appdataPath;
 
     return 0;
 }
@@ -528,13 +526,9 @@ int ServiceManager::scan(wchar_t* path) {
     Scanner scanner;
     SignatureBaseFileReader baseReader;
 
-    wchar_t* appdataPath = NULL;
-    appdataDirectory(&appdataPath);
-    wcscat_s(appdataPath, MAX_PATH, BASE_FILE_NAME);
+    std::wstring appdataPath = appdataDirectory() + BASE_FILE_NAME;
 
-    baseReader.open(appdataPath);
-
-    delete[] appdataPath;
+    baseReader.open((wchar_t*) appdataPath.c_str());
 
     for (int i = 0; i < baseReader.getRecordsCount(); i++) {
         VirusRecord record;

@@ -9,6 +9,7 @@ sealed interface ScannerViewState {
         val isEnabled: Boolean,
         val isFileDialogVisible: Boolean = false,
         val messageDialogState: MessageDialogState = MessageDialogState.Gone,
+        val showAllOkMessage: Boolean = false
     ) : ScannerViewState
 
     data class Running(

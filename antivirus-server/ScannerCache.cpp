@@ -39,7 +39,7 @@ DWORD WINAPI savingThreadHandler(LPVOID lpvParam) {
 
             try {
                 scannerDataFile.open(
-                    params->scannerDataFilePath,
+                    (wchar_t*) params->scannerDataFilePath.c_str(),
                     std::ios::out | std::ios::binary | std::ios::trunc
                 );
             }
@@ -76,8 +76,7 @@ DWORD WINAPI savingThreadHandler(LPVOID lpvParam) {
 ScannerCache::ScannerCache(bool saverEnabled) {
     m_saverEnabled = saverEnabled;
 
-    appdataDirectory(&m_scannerDataFilePath);
-    wcscat_s(m_scannerDataFilePath, MAX_PATH, SCANNER_DATA_FILE_NAME);
+    m_scannerDataFilePath = appdataDirectory() + SCANNER_DATA_FILE_NAME;
 
     m_savingThreadParams = new SavingThreadParams;
     m_savingThreadParams->saveRequests = &m_saveRequests;
@@ -105,7 +104,6 @@ ScannerCache::~ScannerCache() {
     WaitForSingleObject(m_savingThread, INFINITE);
     delete m_savingThreadParams;
     CloseHandle(m_savingThread);
-    delete[] m_scannerDataFilePath;
 }
 
 void ScannerCache::save(
@@ -173,7 +171,7 @@ void ScannerCache::validate() {
         save(all, statuses, SCANNED);
         LogWriter::log(L"ScannerCache:Validate: Scanner status updated to SCANNED\n");
     } else {
-        if (DeleteFile(m_scannerDataFilePath)) {
+        if (DeleteFile(m_scannerDataFilePath.c_str())) {
             LogWriter::log(L"ScannerCache:Validate: Scanner cached data deleted\n");
         }
         else {

@@ -7,6 +7,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -155,15 +156,32 @@ private fun ScannerIdle(
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {
-            Icon(
-                painter = painterResource(Drawables.VirusScanIcon),
-                tint = if (state.isEnabled) {
-                    ApplicationTheme.colors.primary
-                } else {
-                    ApplicationTheme.colors.primaryDisabled
-                },
-                contentDescription = null
-            )
+            if (state.showAllOkMessage) {
+                Icon(
+                    painter = painterResource(Drawables.Ok),
+                    tint = Color.Unspecified,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(ElementsDimens.ScanWarningIconSize)
+                )
+
+                Spacer(modifier = Modifier.height(InsetsDimens.Default))
+
+                Text(
+                    text = strings.virusesNotFound,
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                Icon(
+                    painter = painterResource(Drawables.VirusScanIcon),
+                    tint = if (state.isEnabled) {
+                        ApplicationTheme.colors.primary
+                    } else {
+                        ApplicationTheme.colors.primaryDisabled
+                    },
+                    contentDescription = null
+                )
+            }
 
             Spacer(modifier = Modifier.height(InsetsDimens.Default))
 

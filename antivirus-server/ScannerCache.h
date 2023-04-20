@@ -18,7 +18,7 @@ namespace Antivirus {
 		struct SavingThreadParams {
 			int64_t* lastSaveRequestMillis;
 			std::vector<DelayedSavingItem>* saveRequests;
-			wchar_t* scannerDataFilePath;
+			std::wstring scannerDataFilePath;
 			bool* saverEnabled;
 		};
 	private:
@@ -26,7 +26,7 @@ namespace Antivirus {
 		SavingThreadParams* m_savingThreadParams;
 		std::vector<DelayedSavingItem> m_saveRequests;
 		int64_t m_lastSaveRequestMillis;
-		wchar_t* m_scannerDataFilePath;
+		std::wstring m_scannerDataFilePath;
 		bool m_saverEnabled;
 	public:
 		ScannerCache(bool saverEnabled = false);

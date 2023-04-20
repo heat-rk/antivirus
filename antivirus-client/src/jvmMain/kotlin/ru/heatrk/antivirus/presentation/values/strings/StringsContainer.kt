@@ -33,6 +33,7 @@ interface StringsContainer {
     val resume: String
     val more: String
     val ellipsis: String
+    val virusesNotFound: String
 
     val selectFilesToScan: String
 

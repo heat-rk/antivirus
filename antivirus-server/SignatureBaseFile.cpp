@@ -35,7 +35,8 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 		try {
 			m_file.open(filename, std::ios::out | std::ios::binary);
 		} catch (std::system_error& e) {
-			LogWriter::log("%s\n", e.code().message().c_str());
+			LogWriter::log("SignatureBaseFileWriter: %s\n", e.code().message().c_str());
+			return false;
 		}
 
 		if (!m_file.is_open()) {
@@ -52,7 +53,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 
 		m_file.write(bytes, byteBuffer.size());
 
-		delete bytes;
+		delete[] bytes;
 	} else {
 		m_file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
 
@@ -74,7 +75,7 @@ bool SignatureBaseFileWriter::open(wchar_t* filename, bool trunc) {
 
 		this->m_recordsCount = byteBuffer.getInt32();
 
-		delete bytes;
+		delete[] bytes;
 	}
 
 	return true;
@@ -94,7 +95,7 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 
 	m_file.write(bytes, byteBuffer.size());
 
-	delete bytes;
+	delete[] bytes;
 
 	m_file.seekp(sizeof(SIGN), std::ios::beg);
 
@@ -109,7 +110,7 @@ bool SignatureBaseFileWriter::addRecord(VirusRecord record) {
 
 	m_file.write(recordsCountBytes, byteBuffer.size());
 
-	delete recordsCountBytes;
+	delete[] recordsCountBytes;
 
 	return true;
 }
@@ -120,9 +121,19 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 	if (filename == NULL) return false;
 
 	if (isFileExist(filename)) {
-		m_file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
+		m_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
-		if (!m_file.is_open()) return false;
+		try {
+			m_file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
+		}
+		catch (std::system_error& e) {
+			LogWriter::log("SignatureBaseFileReader: %s\n", e.code().message().c_str());
+			return false;
+		}
+
+		if (!m_file.is_open()) {
+			return false;
+		}
 
 		ByteBuffer byteBuffer(sizeof(SIGN) + sizeof(int32_t));
 
@@ -140,7 +151,7 @@ bool SignatureBaseFileReader::open(wchar_t* filename) {
 
 		this->m_recordsCount = byteBuffer.getInt32();
 
-		delete bytes;
+		delete[] bytes;
 	}
 	else { 
 		return false;
