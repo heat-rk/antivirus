@@ -14,20 +14,20 @@ import ru.heatrk.antivirus.presentation.values.strings.strings
 import ru.heatrk.antivirus.presentation.values.styles.ApplicationTheme
 
 @Composable
-fun ServiceControl(
-    state: ServiceControlViewState,
-    onIntent: (ServiceControlIntent) -> Unit,
+fun ProtectionControl(
+    state: ProtectionControlViewState,
+    onIntent: (ProtectionControlIntent) -> Unit,
     modifier: Modifier
 ) {
     when (state) {
-        is ServiceControlViewState.Loading -> ServiceControlLoading(state, modifier)
-        is ServiceControlViewState.Ok -> ServiceControlOk(state, onIntent, modifier)
+        is ProtectionControlViewState.Loading -> ProtectionControlLoading(state, modifier)
+        is ProtectionControlViewState.Ok -> ProtectionControlOk(state, onIntent, modifier)
     }
 }
 
 @Composable
-private fun ServiceControlLoading(
-    state: ServiceControlViewState.Loading,
+private fun ProtectionControlLoading(
+    state: ProtectionControlViewState.Loading,
     modifier: Modifier
 ) {
     Box(
@@ -39,14 +39,14 @@ private fun ServiceControlLoading(
 }
 
 @Composable
-private fun ServiceControlOk(
-    state: ServiceControlViewState.Ok,
-    onIntent: (ServiceControlIntent) -> Unit,
+private fun ProtectionControlOk(
+    state: ProtectionControlViewState.Ok,
+    onIntent: (ProtectionControlIntent) -> Unit,
     modifier: Modifier
 ) {
     MessageDialog(
         messageDialogState = state.messageDialogState,
-        onDismiss = { onIntent(ServiceControlIntent.DialogDismiss) }
+        onDismiss = { onIntent(ProtectionControlIntent.DialogDismiss) }
     )
 
     Surface(
@@ -61,7 +61,7 @@ private fun ServiceControlOk(
                 .padding(InsetsDimens.Default)
         ) {
             IconButton(
-                onClick = { onIntent(ServiceControlIntent.ShowInfo) },
+                onClick = { onIntent(ProtectionControlIntent.ShowInfo) },
                 modifier = Modifier.size(ElementsDimens.InfoIconButtonSize)
             ) {
                 Icon(
@@ -73,13 +73,13 @@ private fun ServiceControlOk(
 
             Spacer(modifier = Modifier.width(InsetsDimens.Default))
 
-            Text(text = strings.enableAntivirusService)
+            Text(text = strings.enableAntivirusProtection)
 
             Spacer(modifier = Modifier.weight(1f))
 
             Switch(
                 checked = state.isServiceEnabled,
-                onCheckedChange = { onIntent(ServiceControlIntent.EnabledChange(it)) }
+                onCheckedChange = { onIntent(ProtectionControlIntent.EnabledChange(it)) }
             )
         }
     }

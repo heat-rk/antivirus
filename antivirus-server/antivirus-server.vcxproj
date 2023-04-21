@@ -213,6 +213,7 @@
     <ClInclude Include="OutgoingMessageBodyError.h" />
     <ClInclude Include="MessageStatus.h" />
     <ClInclude Include="MessageMethod.h" />
+    <ClInclude Include="OutgoingMessageBodyProtection.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="ScannerCache.h" />
     <ClInclude Include="ScannerConstants.h" />

@@ -144,7 +144,7 @@ private fun ScannerIdle(
     Surface(
         shape = ApplicationTheme.shapes.medium,
         modifier = modifier
-            .clickable(enabled = state.isEnabled) {
+            .clickable {
                 onIntent(ScannerIntent.ShowFileSelectionDialog)
             }
     ) {
@@ -174,11 +174,7 @@ private fun ScannerIdle(
             } else {
                 Icon(
                     painter = painterResource(Drawables.VirusScanIcon),
-                    tint = if (state.isEnabled) {
-                        ApplicationTheme.colors.primary
-                    } else {
-                        ApplicationTheme.colors.primaryDisabled
-                    },
+                    tint = ApplicationTheme.colors.primary,
                     contentDescription = null
                 )
             }
@@ -186,11 +182,7 @@ private fun ScannerIdle(
             Spacer(modifier = Modifier.height(InsetsDimens.Default))
 
             Text(
-                text = if (state.isEnabled) {
-                    strings.clickToScan
-                } else {
-                    strings.scanUnavailable
-                },
+                text = strings.clickToScan,
                 textAlign = TextAlign.Center
             )
         }
@@ -294,9 +286,7 @@ private fun ScannerRunning(
 private fun ScannerIdlePreview() {
     ApplicationTheme {
         Scanner(
-            state = ScannerViewState.Idle(
-                isEnabled = true
-            ),
+            state = ScannerViewState.Idle(),
             onIntent = {},
         )
     }

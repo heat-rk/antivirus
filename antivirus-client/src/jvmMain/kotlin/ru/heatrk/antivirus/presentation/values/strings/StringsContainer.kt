@@ -18,7 +18,7 @@ interface StringsContainer {
     val startService: String
     val stopService: String
 
-    val enableAntivirusService: String
+    val enableAntivirusProtection: String
 
     val infoButtonContentDescription: String
 

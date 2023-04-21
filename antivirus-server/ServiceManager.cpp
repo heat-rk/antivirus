@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <Tlhelp32.h>
 
 #include "SignatureBaseFile.h"
 #include "Sha256.h"
@@ -51,13 +52,48 @@ int ServiceManager::installService() {
 
     LogWriter::log("ServiceManager: Success install service!\n");
 
-    return 0;
+    return runService();
 }
 
 int ServiceManager::uninstallService() {
-    if (stopService() != 0) {
-        return -1;
+    HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+    PROCESSENTRY32 pEntry;
+    pEntry.dwSize = sizeof(pEntry);
+    BOOL hRes = Process32First(hSnapShot, &pEntry);
+    wchar_t name[MAX_PATH];
+    GetModuleFileName(NULL, name, MAX_PATH);
+    std::wstring fullPathStr(name);
+    size_t pos = fullPathStr.find_last_of(L'\\');
+    std::wstring filename;
+
+    if (pos == std::wstring::npos) {
+        filename = fullPathStr;
     }
+    else {
+        filename = fullPathStr.substr(pos + 1);
+    }
+
+    const wchar_t* processName = filename.c_str();
+
+    while (hRes) {
+        if (wcscmp(pEntry.szExeFile, processName) == 0) {
+            HANDLE hProcess = OpenProcess(
+                PROCESS_TERMINATE,
+                0,
+                (DWORD)pEntry.th32ProcessID
+            );
+
+            if (hProcess != NULL && pEntry.th32ProcessID != GetCurrentProcessId()) {
+                TerminateProcess(hProcess, 9);
+                WaitForSingleObject(hProcess, INFINITE);
+                CloseHandle(hProcess);
+            }
+        }
+
+        hRes = Process32Next(hSnapShot, &pEntry);
+    }
+
+    CloseHandle(hSnapShot);
 
 	SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 

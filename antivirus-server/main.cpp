@@ -8,6 +8,7 @@
 #include "MessageStatus.h"
 #include "ServiceManager.h"
 #include "IncomingMessageBodyScan.h"
+#include "OutgoingMessageBodyProtection.h"
 #include "LogWriter.h"
 #include "ScannerCache.h"
 
@@ -18,12 +19,30 @@ wchar_t const* const SERVICE_NAME = TEXT("AntivirusService");
 SERVICE_STATUS          g_ServiceStatus = { 0 };
 SERVICE_STATUS_HANDLE   g_StatusHandle = NULL;
 HANDLE                  g_ServiceStopEvent = INVALID_HANDLE_VALUE;
+BOOL                    g_Protected = TRUE;
 
 Channel                 channel;
 Channel                 internalChannel;
 
 void handleClientMessage(Message message) {
-    if (cmpstrs(MessageMethod::E_SCAN_START, message.method, sizeof(message.method))) {
+    if (cmpstrs(MessageMethod::E_IS_PROTECTED, message.method, sizeof(message.method))) {
+        OutgoingMessageBodyProtection body;
+        body.status = g_Protected ? ProtectionStatus::E_ENABLED : ProtectionStatus::E_DISABLED;
+
+        Message response = generateMessage(
+            message.method,
+            message.uuid,
+            MessageStatus::E_OK,
+            &body
+        );
+
+        channel.write(response);
+    }
+    else if (cmpstrs(MessageMethod::E_ENABLE_PROTECTION, message.method, sizeof(message.method))) {
+        g_Protected = TRUE;
+    } else if (cmpstrs(MessageMethod::E_DISABLE_PROTECTION, message.method, sizeof(message.method))) {
+        g_Protected = FALSE;
+    } else if (cmpstrs(MessageMethod::E_SCAN_START, message.method, sizeof(message.method))) {
         IncomingMessageBodyScan body =
             incomingMessageBodyScanDeserializer.createFromBytes(message.body);
 
@@ -197,7 +216,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
         return;
     }
 
-    g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+    g_ServiceStatus.dwControlsAccepted = 0;
     g_ServiceStatus.dwCurrentState = SERVICE_RUNNING;
     g_ServiceStatus.dwWin32ExitCode = 0;
     g_ServiceStatus.dwCheckPoint = 0;
@@ -240,9 +259,6 @@ int wmain(int argc, wchar_t* argv[]) {
         }
         else if (wcscmp(argv[1], L"--uninstall") == 0) {
             sm.uninstallService();
-        }
-        else if (wcscmp(argv[1], L"--start") == 0) {
-            sm.runService();
         }
         else if (wcscmp(argv[1], L"--load-base") == 0) {
             sm.loadBaseInput(argv[2]);

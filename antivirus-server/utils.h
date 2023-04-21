@@ -18,6 +18,12 @@ namespace Antivirus {
 
 	Message generateMessage(
 		char* method,
+		char* uuid,
+		int8_t status
+	);
+
+	Message generateMessage(
+		char* method,
 		int8_t status,
 		Serializable* body
 	);

@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import ru.heatrk.antivirus.data.api.AntivirusApi
 import ru.heatrk.antivirus.data.models.ApiMessage
+import ru.heatrk.antivirus.data.models.MessageStatus
 import ru.heatrk.antivirus.data.models.ScannerCacheData
+import ru.heatrk.antivirus.data.models.structs.MessageBodyProtectionStruct
 import ru.heatrk.antivirus.domain.models.ScanState
 import ru.heatrk.antivirus.domain.models.ScannerEntryStatus
 import ru.heatrk.antivirus.domain.models.ScannerStatus
@@ -17,16 +19,28 @@ class MessagingRepositoryImpl(
     private val antivirusApi: AntivirusApi,
     private val ioDispatcher: CoroutineDispatcher
 ): MessagingRepository {
-    override suspend fun isServiceEnabled() = withContext(ioDispatcher) {
-        antivirusApi.isServiceEnabled()
+    override suspend fun isProtectionEnabled() = withContext(ioDispatcher) {
+        when (val response = antivirusApi.isProtectionEnabled()) {
+            is ApiMessage.Ok -> {
+                val bodyBytes = response.body.body ?: return@withContext ApiMessage.Ok(false)
+                val body = MessageBodyProtectionStruct.create(bodyBytes)
+                ApiMessage.Ok(body.status == MessageBodyProtectionStruct.ENABLED)
+            }
+            is ApiMessage.Fail -> {
+                ApiMessage.Fail(
+                    description = response.description,
+                    errorCode = response.errorCode
+                )
+            }
+        }
     }
 
-    override suspend fun startService() = withContext(ioDispatcher) {
-        antivirusApi.startService()
+    override suspend fun enableProtection() = withContext(ioDispatcher) {
+        antivirusApi.enableProtection()
     }
 
-    override suspend fun stopService() = withContext(ioDispatcher) {
-        antivirusApi.stopService()
+    override suspend fun disableProtection() = withContext(ioDispatcher) {
+        antivirusApi.disableProtection()
     }
 
     override suspend fun startScan(path: String) = withContext(ioDispatcher) {

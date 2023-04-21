@@ -173,5 +173,8 @@
     <ClInclude Include="ChannelCore.h">
       <Filter>Исходные файлы\core\ipc</Filter>
     </ClInclude>
+    <ClInclude Include="OutgoingMessageBodyProtection.h">
+      <Filter>Исходные файлы\app\models\outgoing</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

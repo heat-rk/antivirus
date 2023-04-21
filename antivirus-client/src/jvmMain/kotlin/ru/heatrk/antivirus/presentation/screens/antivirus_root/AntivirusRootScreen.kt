@@ -15,9 +15,9 @@ import ru.heatrk.antivirus.presentation.dialogs.MessageDialog
 import ru.heatrk.antivirus.presentation.screens.scanner.Scanner
 import ru.heatrk.antivirus.presentation.screens.scanner.ScannerIntent
 import ru.heatrk.antivirus.presentation.screens.scanner.ScannerViewState
-import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControl
-import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlIntent
-import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlViewState
+import ru.heatrk.antivirus.presentation.screens.service_control.ProtectionControl
+import ru.heatrk.antivirus.presentation.screens.service_control.ProtectionControlIntent
+import ru.heatrk.antivirus.presentation.screens.service_control.ProtectionControlViewState
 import ru.heatrk.antivirus.presentation.values.dimens.ElementsDimens
 import ru.heatrk.antivirus.presentation.values.dimens.InsetsDimens
 import ru.heatrk.antivirus.presentation.values.strings.strings
@@ -28,14 +28,14 @@ fun AntivirusRootScreen(
     component: AntivirusRootComponent
 ) {
     val antivirusRootViewState by component.state.collectAsState()
-    val serviceControlViewState by component.serviceControlComponent.state.collectAsState()
+    val serviceControlViewState by component.protectionControlComponent.state.collectAsState()
     val scannerViewState by component.scannerComponent.state.collectAsState()
 
     AntivirusRootScreen(
         state = antivirusRootViewState,
         onIntent = component::onIntent,
-        serviceControlViewState = serviceControlViewState,
-        onServiceControlIntent = component.serviceControlComponent::onIntent,
+        protectionControlViewState = serviceControlViewState,
+        onServiceControlIntent = component.protectionControlComponent::onIntent,
         scannerViewState = scannerViewState,
         onScannerIntent = component.scannerComponent::onIntent
     )
@@ -45,8 +45,8 @@ fun AntivirusRootScreen(
 private fun AntivirusRootScreen(
     state: AntivirusRootViewState,
     onIntent: (AntivirusRootIntent) -> Unit,
-    serviceControlViewState: ServiceControlViewState,
-    onServiceControlIntent: (ServiceControlIntent) -> Unit,
+    protectionControlViewState: ProtectionControlViewState,
+    onServiceControlIntent: (ProtectionControlIntent) -> Unit,
     scannerViewState: ScannerViewState,
     onScannerIntent: (ScannerIntent) -> Unit
 ) {
@@ -59,7 +59,7 @@ private fun AntivirusRootScreen(
             AntivirusRootOkScreen(
                 state = state,
                 onIntent = onIntent,
-                serviceControlViewState = serviceControlViewState,
+                protectionControlViewState = protectionControlViewState,
                 onServiceControlIntent = onServiceControlIntent,
                 scannerViewState = scannerViewState,
                 onScannerIntent = onScannerIntent
@@ -91,8 +91,8 @@ private fun AntivirusRootLoadingScreen(
 private fun AntivirusRootOkScreen(
     state: AntivirusRootViewState.Ok,
     onIntent: (AntivirusRootIntent) -> Unit,
-    serviceControlViewState: ServiceControlViewState,
-    onServiceControlIntent: (ServiceControlIntent) -> Unit,
+    protectionControlViewState: ProtectionControlViewState,
+    onServiceControlIntent: (ProtectionControlIntent) -> Unit,
     scannerViewState: ScannerViewState,
     onScannerIntent: (ScannerIntent) -> Unit
 ) {
@@ -107,8 +107,8 @@ private fun AntivirusRootOkScreen(
             .wrapContentHeight()
             .padding(InsetsDimens.Default)
     ) {
-        ServiceControl(
-            state = serviceControlViewState,
+        ProtectionControl(
+            state = protectionControlViewState,
             onIntent = onServiceControlIntent,
             modifier = Modifier
                 .fillMaxWidth()
@@ -179,7 +179,7 @@ private fun AntivirusRootScreenPreview() {
         AntivirusRootScreen(
             state = AntivirusRootViewState.Ok(),
             onIntent = {},
-            serviceControlViewState = ServiceControlViewState.Ok(
+            protectionControlViewState = ProtectionControlViewState.Ok(
                 isServiceEnabled = true
             ),
             onServiceControlIntent = {},

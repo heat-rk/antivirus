@@ -10,10 +10,7 @@ import com.sun.jna.platform.win32.WinNT.*
 import com.sun.jna.platform.win32.Winsvc
 import com.sun.jna.ptr.IntByReference
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.data.models.MessageMethod
 import ru.heatrk.antivirus.data.models.MessageStatus
@@ -158,126 +155,51 @@ class AntivirusApiImpl(
         return send(requestMessage)
     }
 
-    override suspend fun isServiceEnabled(): ApiMessage<Boolean> {
-        val scManager = advapi32.OpenSCManager(null, null, Winsvc.SC_MANAGER_CONNECT)
-            ?: return ApiMessage.Fail(
-                description = "OpenSCManager [Service enabled check]",
-                errorCode = kernel32.GetLastError()
-            )
+    override suspend fun isProtectionEnabled(): ApiMessage<MessageStruct> {
+        val pipeConnectionResult = connectPipes()
 
-        val serviceStatusProcess = Winsvc.SERVICE_STATUS_PROCESS()
-
-        val service: Winsvc.SC_HANDLE? = advapi32.OpenService(
-            scManager,
-            ANTIVIRUS_SERVICE_NAME,
-            Winsvc.SERVICE_QUERY_STATUS
-        )
-
-        if (service == null) {
-            advapi32.CloseServiceHandle(scManager)
-
-            return ApiMessage.Fail(
-                description = "OpenService [Service enabled check]",
-                errorCode = kernel32.GetLastError()
-            )
+        if (pipeConnectionResult !is ApiMessage.Ok) {
+            return ApiMessage.Fail(description = "Pipes connection failed [Protection enabled check]")
         }
 
-        if (
-            !advapi32.QueryServiceStatusEx(
-                service,
-                Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                serviceStatusProcess,
-                serviceStatusProcess.size(),
-                IntByReference()
-            )
-        ) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Fail(
-                description = "QueryServiceStatusEx [Service enabled check]",
-                errorCode = kernel32.GetLastError()
-            )
+        val requestMessage = MessageStruct().apply {
+            MessageMethod.IS_PROTECTED.id.copyInto(this.method)
+            status = MessageStatus.REQUEST.id
         }
 
-        var startTickCount = kernel32.GetTickCount()
-        var oldCheckPoint = serviceStatusProcess.dwCheckPoint
-
-        while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOP_PENDING) {
-            var dwWaitTime = serviceStatusProcess.dwWaitHint / 10L
-
-            if (dwWaitTime < 1000) {
-                dwWaitTime = 1000
-            } else if ( dwWaitTime > 10000 ) {
-                dwWaitTime = 10000
-            }
-
-            delay(dwWaitTime)
-
-            if (
-                !advapi32.QueryServiceStatusEx(
-                    service,
-                    Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                    serviceStatusProcess,
-                    serviceStatusProcess.size(),
-                    IntByReference()
-                )
-            ) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "QueryServiceStatusEx [Service enabled check]",
-                    errorCode = kernel32.GetLastError()
-                )
-            }
-
-            if (serviceStatusProcess.dwCheckPoint > oldCheckPoint) {
-                startTickCount = kernel32.GetTickCount()
-                oldCheckPoint = serviceStatusProcess.dwCheckPoint
-            } else if (kernel32.GetTickCount() - startTickCount > serviceStatusProcess.dwWaitHint) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "Service enabled check timeout [Service enabled check]"
-                )
-            }
+        withTimeoutOrNull(REQUEST_TIMEOUT) {
+            send(requestMessage)
         }
 
-        val isEnabled = serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_RUNNING
-
-        advapi32.CloseServiceHandle(scManager)
-        advapi32.CloseServiceHandle(service)
-
-        return if (isEnabled) {
-            val pipeConnectionResult = connectPipes()
-
-            if (pipeConnectionResult is ApiMessage.Ok) {
-                ApiMessage.Ok(true)
-            } else {
-                ApiMessage.Fail(description = "Pipes connection failed [Service enabled check]")
-            }
-        } else {
-            ApiMessage.Ok(false)
+        val responseMessage = withTimeoutOrNull(RESPONSE_TIMEOUT) {
+            incomingMessages.transformWhile { message ->
+                if (message is ApiMessage.Ok && message.body.isUuidEquals(requestMessage)) {
+                    emit(message)
+                    return@transformWhile false
+                }
+                return@transformWhile true
+            }.first()
         }
+
+        return responseMessage ?: ApiMessage.Fail("Request timeout")
     }
 
-    override suspend fun startService(): ApiMessage<Unit> {
-        reset()
-
-        val windowsServiceStartResult = startWindowsService()
-
-        if (windowsServiceStartResult is ApiMessage.Fail) {
-            return windowsServiceStartResult
+    override suspend fun enableProtection(): ApiMessage<Unit> {
+        val requestMessage = MessageStruct().apply {
+            MessageMethod.ENABLE_PROTECTION.id.copyInto(this.method)
+            status = MessageStatus.REQUEST.id
         }
 
-        return connectPipes()
+        return send(requestMessage)
     }
 
-    override suspend fun stopService(): ApiMessage<Unit> {
-        reset()
-        return stopWindowsService()
+    override suspend fun disableProtection(): ApiMessage<Unit> {
+        val requestMessage = MessageStruct().apply {
+            MessageMethod.DISABLE_PROTECTION.id.copyInto(this.method)
+            status = MessageStatus.REQUEST.id
+        }
+
+        return send(requestMessage)
     }
 
     private fun reset() {
@@ -415,329 +337,10 @@ class AntivirusApiImpl(
         }
     }
 
-    private suspend fun startWindowsService(): ApiMessage<Unit> {
-        val scManager = advapi32.OpenSCManager(null, null, Winsvc.SC_MANAGER_CONNECT)
-            ?: return ApiMessage.Fail(
-                description = "OpenSCManager [Start service]",
-                errorCode = kernel32.GetLastError()
-            )
-
-        val serviceStatusProcess = Winsvc.SERVICE_STATUS_PROCESS()
-
-        val service: Winsvc.SC_HANDLE? = advapi32.OpenService(
-            scManager,
-            ANTIVIRUS_SERVICE_NAME,
-            Winsvc.SERVICE_START or Winsvc.SERVICE_QUERY_STATUS
-        )
-
-        if (service == null) {
-            advapi32.CloseServiceHandle(scManager)
-
-            return ApiMessage.Fail(
-                description = "OpenService [Start service]",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        if (
-            !advapi32.QueryServiceStatusEx(
-                service,
-                Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                serviceStatusProcess,
-                serviceStatusProcess.size(),
-                IntByReference()
-            )
-        ) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Fail(
-                description = "QueryServiceStatusEx [Start service]",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        if (serviceStatusProcess.dwCurrentState != Winsvc.SERVICE_STOPPED &&
-            serviceStatusProcess.dwCurrentState != Winsvc.SERVICE_STOP_PENDING) {
-
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Ok(Unit)
-        }
-
-        var startTickCount = kernel32.GetTickCount()
-        var oldCheckPoint = serviceStatusProcess.dwCheckPoint
-
-        while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOP_PENDING) {
-            var dwWaitTime = serviceStatusProcess.dwWaitHint / 10L
-
-            if (dwWaitTime < 1000) {
-                dwWaitTime = 1000
-            } else if ( dwWaitTime > 10000 ) {
-                dwWaitTime = 10000
-            }
-
-            delay(dwWaitTime)
-
-            if (
-                !advapi32.QueryServiceStatusEx(
-                    service,
-                    Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                    serviceStatusProcess,
-                    serviceStatusProcess.size(),
-                    IntByReference()
-                )
-            ) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "QueryServiceStatusEx [Start service]",
-                    errorCode = kernel32.GetLastError()
-                )
-            }
-
-            if (serviceStatusProcess.dwCheckPoint > oldCheckPoint) {
-                startTickCount = kernel32.GetTickCount()
-                oldCheckPoint = serviceStatusProcess.dwCheckPoint
-            } else if (kernel32.GetTickCount() - startTickCount > serviceStatusProcess.dwWaitHint) {
-
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "Service stop timeout [Start service]"
-                )
-            }
-        }
-
-        if (!advapi32.StartService(service, 0, null)) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Fail(
-                description = "StartService",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        if (
-            !advapi32.QueryServiceStatusEx(
-                service,
-                Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                serviceStatusProcess,
-                serviceStatusProcess.size(),
-                IntByReference()
-            )
-        ) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Fail(
-                description = "QueryServiceStatusEx [Start service]",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_START_PENDING) {
-            var dwWaitTime = serviceStatusProcess.dwWaitHint / 10L
-
-            if (dwWaitTime < 1000) {
-                dwWaitTime = 1000
-            } else if ( dwWaitTime > 10000 ) {
-                dwWaitTime = 10000
-            }
-
-            delay(dwWaitTime)
-
-            if (
-                !advapi32.QueryServiceStatusEx(
-                    service,
-                    Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                    serviceStatusProcess,
-                    serviceStatusProcess.size(),
-                    IntByReference()
-                )
-            ) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "QueryServiceStatusEx [Start service]",
-                    errorCode = kernel32.GetLastError()
-                )
-            }
-
-            if (serviceStatusProcess.dwCheckPoint > oldCheckPoint) {
-                startTickCount = kernel32.GetTickCount()
-                oldCheckPoint = serviceStatusProcess.dwCheckPoint
-            } else if (kernel32.GetTickCount() - startTickCount > serviceStatusProcess.dwWaitHint) {
-                break
-            }
-        }
-
-        val isRunning = serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_RUNNING
-
-        advapi32.CloseServiceHandle(scManager)
-        advapi32.CloseServiceHandle(service)
-
-        return if (isRunning) {
-            ApiMessage.Ok(Unit)
-        } else {
-            ApiMessage.Fail(description = "Unknown")
-        }
-    }
-
-    private suspend fun stopWindowsService(): ApiMessage<Unit> {
-        val startTime = kernel32.GetTickCount()
-
-        val scManager = advapi32.OpenSCManager(null, null, Winsvc.SC_MANAGER_CONNECT)
-            ?: return ApiMessage.Fail(
-                description = "OpenSCManager [Stop service]",
-                errorCode = kernel32.GetLastError()
-            )
-
-        val serviceStatusProcess = Winsvc.SERVICE_STATUS_PROCESS()
-
-        val service: Winsvc.SC_HANDLE? = advapi32.OpenService(
-            scManager,
-            ANTIVIRUS_SERVICE_NAME,
-            Winsvc.SERVICE_STOP or Winsvc.SERVICE_QUERY_STATUS
-        )
-
-        if (service == null) {
-            advapi32.CloseServiceHandle(scManager)
-
-            return ApiMessage.Fail(
-                description = "OpenService [Stop service]",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        if (
-            !advapi32.QueryServiceStatusEx(
-                service,
-                Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                serviceStatusProcess,
-                serviceStatusProcess.size(),
-                IntByReference()
-            )
-        ) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Fail(
-                description = "QueryServiceStatusEx [Stop service]",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        if (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOPPED) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Ok(Unit)
-        }
-
-        while (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOP_PENDING) {
-            var dwWaitTime = serviceStatusProcess.dwWaitHint / 10L
-
-            if (dwWaitTime < 1000) {
-                dwWaitTime = 1000
-            } else if ( dwWaitTime > 10000 ) {
-                dwWaitTime = 10000
-            }
-
-            delay(dwWaitTime)
-
-            if (
-                !advapi32.QueryServiceStatusEx(
-                    service,
-                    Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                    serviceStatusProcess,
-                    serviceStatusProcess.size(),
-                    IntByReference()
-                )
-            ) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "QueryServiceStatusEx [Stop service]",
-                    errorCode = kernel32.GetLastError()
-                )
-            }
-
-            if (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOPPED) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-                return ApiMessage.Ok(Unit)
-            }
-
-            if (kernel32.GetTickCount() - startTime > WINDOWS_SERVICE_STOP_TIMEOUT) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(description = "Stop timeout [Stop service]")
-            }
-        }
-
-        if (!advapi32.ControlService(service, Winsvc.SERVICE_CONTROL_STOP, Winsvc.SERVICE_STATUS())) {
-            advapi32.CloseServiceHandle(scManager)
-            advapi32.CloseServiceHandle(service)
-
-            return ApiMessage.Fail(
-                description = "ControlService [Stop service]",
-                errorCode = kernel32.GetLastError()
-            )
-        }
-
-        while (serviceStatusProcess.dwCurrentState != Winsvc.SERVICE_STOPPED) {
-            delay(serviceStatusProcess.dwWaitHint.toLong())
-
-            if (
-                !advapi32.QueryServiceStatusEx(
-                    service,
-                    Winsvc.SC_STATUS_TYPE.SC_STATUS_PROCESS_INFO,
-                    serviceStatusProcess,
-                    serviceStatusProcess.size(),
-                    IntByReference()
-                )
-            ) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-
-                return ApiMessage.Fail(
-                    description = "QueryServiceStatusEx [Stop service]",
-                    errorCode = kernel32.GetLastError()
-                )
-            }
-
-            if (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOPPED) {
-                break
-            }
-
-            if (kernel32.GetTickCount() - startTime > WINDOWS_SERVICE_STOP_TIMEOUT) {
-                advapi32.CloseServiceHandle(scManager)
-                advapi32.CloseServiceHandle(service)
-                return ApiMessage.Fail(description = "Stop timeout [Stop service]")
-            }
-        }
-
-        return if (serviceStatusProcess.dwCurrentState == Winsvc.SERVICE_STOPPED) {
-            ApiMessage.Ok(Unit)
-        } else {
-            ApiMessage.Fail(description = "Unknown")
-        }
-    }
-
     companion object {
         private const val PIPE_SERVICE_INPUT_PATH = "\\\\.\\pipe\\antivirus-pipe-service-input"
         private const val PIPE_SERVICE_OUTPUT_PATH = "\\\\.\\pipe\\antivirus-pipe-service-output"
         private const val PIPE_BUFFSIZE = 4096
-        private const val ANTIVIRUS_SERVICE_NAME = "AntivirusService"
-        private const val WINDOWS_SERVICE_STOP_TIMEOUT = 30000
         private const val REQUEST_TIMEOUT = 5000L
         private const val RESPONSE_TIMEOUT = 5000L
         private const val FILE_NOTIFY_INFORMATION_SIZE = 1024

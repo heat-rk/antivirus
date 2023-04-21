@@ -14,10 +14,10 @@ import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
-import ru.heatrk.antivirus.presentation.screens.ServiceStatus
-import ru.heatrk.antivirus.presentation.screens.ServiceStatusListener
+import ru.heatrk.antivirus.presentation.screens.ProtectionListener
+import ru.heatrk.antivirus.presentation.screens.ProtectionStatus
 import ru.heatrk.antivirus.presentation.screens.scanner.ScannerComponent
-import ru.heatrk.antivirus.presentation.screens.service_control.ServiceControlComponent
+import ru.heatrk.antivirus.presentation.screens.service_control.ProtectionControlComponent
 import ru.heatrk.antivirus.presentation.values.strings.strings
 
 class AntivirusRootComponent(
@@ -27,7 +27,7 @@ class AntivirusRootComponent(
     di: DI
 ): Component(componentContext) {
 
-    val serviceControlComponent = ServiceControlComponent(
+    val protectionControlComponent = ProtectionControlComponent(
         componentContext = childContext(key = "serviceControlContext")
     )
 
@@ -36,9 +36,8 @@ class AntivirusRootComponent(
         messagingRepository = messagingRepository
     )
 
-    private val statusListeners = listOf<ServiceStatusListener>(
-        serviceControlComponent,
-        scannerComponent
+    private val statusListeners = listOf<ProtectionListener>(
+        protectionControlComponent
     )
 
     private val _state = MutableStateFlow<AntivirusRootViewState>(AntivirusRootViewState.Loading)
@@ -71,16 +70,16 @@ class AntivirusRootComponent(
     private fun load() = componentScope.launch {
         _state.value = AntivirusRootViewState.Loading
 
-        when (val result = messagingRepository.isServiceEnabled()) {
+        when (val result = messagingRepository.isProtectionEnabled()) {
             is ApiMessage.Ok -> {
                 _state.value = AntivirusRootViewState.Ok()
 
                 statusListeners.forEach {
                     it.onStatusReceived(
                         if (result.body) {
-                            ServiceStatus.ENABLED
+                            ProtectionStatus.ENABLED
                         } else {
-                            ServiceStatus.DISABLED
+                            ProtectionStatus.DISABLED
                         }
                     )
                 }
@@ -103,17 +102,17 @@ class AntivirusRootComponent(
         listenersJobs.forEach(Job::cancel)
         listenersJobs.clear()
 
-        serviceControlComponent.serviceStartEvents
+        protectionControlComponent.serviceStartEvents
             .onEach {
-                statusListeners.forEach { it.onStatusReceived(ServiceStatus.LOADING) }
+                statusListeners.forEach { it.onStatusReceived(ProtectionStatus.LOADING) }
 
-                when (val result = messagingRepository.startService()) {
+                when (val result = messagingRepository.enableProtection()) {
                     is ApiMessage.Ok -> {
-                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.ENABLED) }
+                        statusListeners.forEach { it.onStatusReceived(ProtectionStatus.ENABLED) }
                     }
 
                     is ApiMessage.Fail -> {
-                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.DISABLED) }
+                        statusListeners.forEach { it.onStatusReceived(ProtectionStatus.DISABLED) }
 
                         _state.value = AntivirusRootViewState.Ok(
                             messageDialogState = MessageDialogState.Error(
@@ -130,17 +129,17 @@ class AntivirusRootComponent(
             .launchIn(componentScope)
             .also { listenersJobs.add(it) }
 
-        serviceControlComponent.serviceStopEvents
+        protectionControlComponent.serviceStopEvents
             .onEach {
-                statusListeners.forEach { it.onStatusReceived(ServiceStatus.LOADING)}
+                statusListeners.forEach { it.onStatusReceived(ProtectionStatus.LOADING)}
 
-                when (val result = messagingRepository.stopService()) {
+                when (val result = messagingRepository.disableProtection()) {
                     is ApiMessage.Ok -> {
-                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.DISABLED) }
+                        statusListeners.forEach { it.onStatusReceived(ProtectionStatus.DISABLED) }
                     }
 
                     is ApiMessage.Fail -> {
-                        statusListeners.forEach { it.onStatusReceived(ServiceStatus.ENABLED) }
+                        statusListeners.forEach { it.onStatusReceived(ProtectionStatus.ENABLED) }
 
                         _state.value = AntivirusRootViewState.Ok(
                             messageDialogState = MessageDialogState.Error(

@@ -1,5 +1,5 @@
 package ru.heatrk.antivirus.presentation.screens
 
-enum class ServiceStatus {
+enum class ProtectionStatus {
     LOADING, ENABLED, DISABLED
 }

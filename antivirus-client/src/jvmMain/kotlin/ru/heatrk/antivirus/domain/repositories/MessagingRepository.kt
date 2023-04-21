@@ -6,9 +6,9 @@ import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.domain.models.ScanState
 
 interface MessagingRepository {
-    suspend fun isServiceEnabled(): ApiMessage<Boolean>
-    suspend fun startService(): ApiMessage<Unit>
-    suspend fun stopService(): ApiMessage<Unit>
+    suspend fun isProtectionEnabled(): ApiMessage<Boolean>
+    suspend fun enableProtection(): ApiMessage<Unit>
+    suspend fun disableProtection(): ApiMessage<Unit>
     suspend fun startScan(path: String): ApiMessage<Unit>
     suspend fun pauseScan(): ApiMessage<Unit>
     suspend fun resumeScan(): ApiMessage<Unit>

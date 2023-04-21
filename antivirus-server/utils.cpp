@@ -33,6 +33,22 @@ Message Antivirus::generateMessage(
 
 Message Antivirus::generateMessage(
 	char* method,
+	char* uuid,
+	int8_t status
+) {
+	Message message;
+
+	snprintf(message.method, sizeof(message.method), "%s", method);
+	snprintf(message.uuid, sizeof(message.uuid), "%s", uuid);
+
+	message.status = status;
+	message.timestamp = timeSinceEpochMillis();
+
+	return message;
+}
+
+Message Antivirus::generateMessage(
+	char* method,
 	int8_t status,
 	Serializable* body
 ) {

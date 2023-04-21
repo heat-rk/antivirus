@@ -34,6 +34,7 @@ namespace Antivirus {
 			byteBuffer->put(uuid, sizeof(uuid));
 			byteBuffer->put(timestamp);
 			byteBuffer->put(status);
+			byteBuffer->put((int32_t) body.size());
 			byteBuffer->put(body);
 		}
 	};

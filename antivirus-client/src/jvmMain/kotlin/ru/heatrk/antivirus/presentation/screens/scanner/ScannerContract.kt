@@ -6,7 +6,6 @@ sealed interface ScannerViewState {
     object Loading : ScannerViewState
 
     data class Idle(
-        val isEnabled: Boolean,
         val isFileDialogVisible: Boolean = false,
         val messageDialogState: MessageDialogState = MessageDialogState.Gone,
         val showAllOkMessage: Boolean = false

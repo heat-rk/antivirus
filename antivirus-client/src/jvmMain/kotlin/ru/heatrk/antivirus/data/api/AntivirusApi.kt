@@ -10,9 +10,9 @@ interface AntivirusApi {
     val incomingMessages: SharedFlow<ApiMessage<MessageStruct>>
     val scannerCacheData: StateFlow<ScannerCacheData?>
 
-    suspend fun isServiceEnabled(): ApiMessage<Boolean>
-    suspend fun startService(): ApiMessage<Unit>
-    suspend fun stopService(): ApiMessage<Unit>
+    suspend fun isProtectionEnabled(): ApiMessage<MessageStruct>
+    suspend fun enableProtection(): ApiMessage<Unit>
+    suspend fun disableProtection(): ApiMessage<Unit>
     suspend fun startScan(path: String): ApiMessage<Unit>
     suspend fun pauseScan(): ApiMessage<Unit>
     suspend fun stopScan(): ApiMessage<Unit>

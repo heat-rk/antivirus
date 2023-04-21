@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
-import ru.heatrk.antivirus.presentation.screens.ServiceStatus
-import ru.heatrk.antivirus.presentation.screens.ServiceStatusListener
+import ru.heatrk.antivirus.presentation.screens.ProtectionStatus
+import ru.heatrk.antivirus.presentation.screens.ProtectionListener
 import ru.heatrk.antivirus.presentation.values.strings.strings
 
-class ServiceControlComponent(
+class ProtectionControlComponent(
     componentContext: ComponentContext
-) : Component(componentContext), ServiceStatusListener {
-    private val _state = MutableStateFlow<ServiceControlViewState>(ServiceControlViewState.Loading)
+) : Component(componentContext), ProtectionListener {
+    private val _state = MutableStateFlow<ProtectionControlViewState>(ProtectionControlViewState.Loading)
     val state = _state.asStateFlow()
 
     private val _serviceStartEvents = Channel<Unit>(Channel.BUFFERED)
@@ -24,9 +24,9 @@ class ServiceControlComponent(
     private val _serviceStopEvents = Channel<Unit>(Channel.BUFFERED)
     val serviceStopEvents = _serviceStopEvents.receiveAsFlow()
 
-    fun onIntent(intent: ServiceControlIntent) = componentScope.launch {
+    fun onIntent(intent: ProtectionControlIntent) = componentScope.launch {
         when (intent) {
-            is ServiceControlIntent.EnabledChange -> {
+            is ProtectionControlIntent.EnabledChange -> {
                 if (intent.isEnabled) {
                     _serviceStartEvents.send(Unit)
                 } else {
@@ -34,10 +34,10 @@ class ServiceControlComponent(
                 }
             }
 
-            ServiceControlIntent.ShowInfo -> {
+            ProtectionControlIntent.ShowInfo -> {
                 val state = _state.value
 
-                if (state !is ServiceControlViewState.Ok) {
+                if (state !is ProtectionControlViewState.Ok) {
                     return@launch
                 }
 
@@ -49,10 +49,10 @@ class ServiceControlComponent(
                 )
             }
 
-            ServiceControlIntent.DialogDismiss -> {
+            ProtectionControlIntent.DialogDismiss -> {
                 val state = _state.value
 
-                if (state !is ServiceControlViewState.Ok) {
+                if (state !is ProtectionControlViewState.Ok) {
                     return@launch
                 }
 
@@ -61,9 +61,9 @@ class ServiceControlComponent(
         }
     }
 
-    override fun onStatusReceived(status: ServiceStatus) {
-        _state.value = ServiceControlViewState.Ok(
-            isServiceEnabled = status == ServiceStatus.ENABLED
+    override fun onStatusReceived(status: ProtectionStatus) {
+        _state.value = ProtectionControlViewState.Ok(
+            isServiceEnabled = status == ProtectionStatus.ENABLED
         )
     }
 
@@ -74,7 +74,7 @@ class ServiceControlComponent(
     companion object {
         fun create(
             args: Args
-        ) = ServiceControlComponent(
+        ) = ProtectionControlComponent(
             componentContext = args.componentContext
         )
     }

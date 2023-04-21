@@ -12,28 +12,22 @@ import ru.heatrk.antivirus.domain.models.ScannerEntryStatus
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
-import ru.heatrk.antivirus.presentation.screens.ServiceStatus
-import ru.heatrk.antivirus.presentation.screens.ServiceStatusListener
+import ru.heatrk.antivirus.presentation.screens.ProtectionStatus
+import ru.heatrk.antivirus.presentation.screens.ProtectionListener
 import ru.heatrk.antivirus.presentation.values.strings.strings
 
 class ScannerComponent(
     componentContext: ComponentContext,
     private val messagingRepository: MessagingRepository
-) : Component(componentContext), ServiceStatusListener {
+) : Component(componentContext) {
 
-    private val _serviceStatus = MutableStateFlow(ServiceStatus.LOADING)
     private val _scanState = messagingRepository.scanState(componentScope)
 
     private val _state = MutableStateFlow<ScannerViewState>(ScannerViewState.Loading)
     val state = _state.asStateFlow()
 
     init {
-        _serviceStatus.onEach { updateState() }.launchIn(componentScope)
         _scanState.onEach { updateState() }.launchIn(componentScope)
-    }
-
-    override fun onStatusReceived(status: ServiceStatus) {
-        _serviceStatus.value = status
     }
 
     fun onIntent(intent: ScannerIntent) {
@@ -49,44 +43,36 @@ class ScannerComponent(
         }
     }
 
-    private fun updateState() = when (_serviceStatus.value) {
-        ServiceStatus.LOADING -> {
-            updateLoadingState()
+    private fun updateState() = when (val scanState = _scanState.value) {
+        ScanState.Empty -> {
+            updateIdleState()
         }
-        ServiceStatus.DISABLED -> {
-            updateIdleState(isEnabled = false)
+        is ScanState.Running -> {
+            val scanned = scanState.entries
+                .count { it.second != ScannerEntryStatus.NOT_SCANNED }
+
+            val virusesCount = scanState.entries
+                .count { it.second == ScannerEntryStatus.SCANNED_INFECTED }
+
+            val scanningPath = scanState.entries
+                .find { it.second == ScannerEntryStatus.NOT_SCANNED }
+                ?.first ?: strings.ellipsis
+
+            val progress = if (scanState.entries.isNotEmpty()) {
+                scanned / scanState.entries.size.toFloat()
+            } else {
+                0f
+            }
+
+            updateRunningState(
+                progress = progress,
+                scanningPath = scanningPath,
+                virusesDetected = virusesCount,
+                isPaused = scanState.isPaused
+            )
         }
-        else -> when (val scanState = _scanState.value) {
-            ScanState.Empty -> {
-                updateIdleState(isEnabled = true)
-            }
-            is ScanState.Running -> {
-                val scanned = scanState.entries
-                    .count { it.second != ScannerEntryStatus.NOT_SCANNED }
-
-                val virusesCount = scanState.entries
-                    .count { it.second == ScannerEntryStatus.SCANNED_INFECTED }
-
-                val scanningPath = scanState.entries
-                    .find { it.second == ScannerEntryStatus.NOT_SCANNED }
-                    ?.first ?: strings.ellipsis
-
-                val progress = if (scanState.entries.isNotEmpty()) {
-                    scanned / scanState.entries.size.toFloat()
-                } else {
-                    0f
-                }
-
-                updateRunningState(
-                    progress = progress,
-                    scanningPath = scanningPath,
-                    virusesDetected = virusesCount,
-                    isPaused = scanState.isPaused
-                )
-            }
-            is ScanState.VirusesDetected -> {
-                updateVirusesDetectedState(virusesDetected = scanState.viruses.size)
-            }
+        is ScanState.VirusesDetected -> {
+            updateVirusesDetectedState(virusesDetected = scanState.viruses.size)
         }
     }
 
@@ -147,22 +133,15 @@ class ScannerComponent(
         handleRequestResult(messagingRepository.stopScan())
     }
 
-    private fun updateLoadingState() {
-        _state.value = ScannerViewState.Loading
-    }
-
-    private fun updateIdleState(
-        isEnabled: Boolean
-    ) {
+    private fun updateIdleState() {
         val state = _state.value
 
         _state.value = if (state is ScannerViewState.Idle) {
-            state.copy(isEnabled = isEnabled)
+            state.copy()
         } else {
             val showAllOkMessage = state is ScannerViewState.Running
 
             ScannerViewState.Idle(
-                isEnabled = isEnabled,
                 showAllOkMessage = showAllOkMessage
             )
         }
