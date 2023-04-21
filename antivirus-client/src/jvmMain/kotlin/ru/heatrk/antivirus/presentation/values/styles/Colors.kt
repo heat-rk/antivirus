@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 
 @Immutable
 data class ApplicationColors(
-
+    val lightBackground: Color,
     val primaryDisabled: Color,
     val materialColors: androidx.compose.material.Colors
 ) {
@@ -30,6 +30,7 @@ val LocalApplicationColors = staticCompositionLocalOf { lightApplicationColors }
 
 val lightApplicationColors = ApplicationColors(
     primaryDisabled = Color(0xFFBBA7D1),
+    lightBackground = Color(0xFFF0F0F0),
     materialColors = lightColors(
         primary = Color(0xFF8D28FA),
         primaryVariant = Color(0xFF6124A3),
@@ -48,6 +49,7 @@ val lightApplicationColors = ApplicationColors(
 
 val darkApplicationColors = ApplicationColors(
     primaryDisabled = Color(0xFFBBA7D1),
+    lightBackground = Color(0xFFF0F0F0),
     materialColors = lightColors(
         primary = Color(0xFF8D28FA),
         primaryVariant = Color(0xFF6124A3),

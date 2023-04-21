@@ -18,4 +18,8 @@ object ElementsDimens {
     val ScanProgressIndicatorHeight = 24.dp
 
     val ScanWarningIconSize = 60.dp
+
+    val ScanningInfoItemIconSize = 16.dp
+
+    val BackButtonIconSize = 32.dp
 }

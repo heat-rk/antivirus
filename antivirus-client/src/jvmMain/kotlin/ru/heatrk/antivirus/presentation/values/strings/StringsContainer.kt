@@ -10,6 +10,8 @@ val strings get() = when(Locale.getDefault().language) {
 interface StringsContainer {
     val applicationName: String get() = "Antivirus"
 
+    val back: String
+
     val info: String
     val error: String
     val reload: String
@@ -36,6 +38,8 @@ interface StringsContainer {
     val virusesNotFound: String
 
     val selectFilesToScan: String
+
+    val quarantine: String
 
     fun errorMessage(description: String, errorCode: Int?): String
     fun scanOf(path: String): String

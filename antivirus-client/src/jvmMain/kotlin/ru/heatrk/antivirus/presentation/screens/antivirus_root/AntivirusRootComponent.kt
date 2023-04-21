@@ -2,6 +2,7 @@ package ru.heatrk.antivirus.presentation.screens.antivirus_root
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,26 +15,30 @@ import ru.heatrk.antivirus.data.models.ApiMessage
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
+import ru.heatrk.antivirus.presentation.routing.Router
 import ru.heatrk.antivirus.presentation.screens.ProtectionListener
 import ru.heatrk.antivirus.presentation.screens.ProtectionStatus
 import ru.heatrk.antivirus.presentation.screens.scanner.ScannerComponent
 import ru.heatrk.antivirus.presentation.screens.service_control.ProtectionControlComponent
 import ru.heatrk.antivirus.presentation.values.strings.strings
+import java.util.UUID
 
 class AntivirusRootComponent(
     componentContext: ComponentContext,
+    private val router: Router,
     private val messagingRepository: MessagingRepository,
     private val defaultDispatcher: CoroutineDispatcher,
     di: DI
 ): Component(componentContext) {
 
     val protectionControlComponent = ProtectionControlComponent(
-        componentContext = childContext(key = "serviceControlContext")
+        componentContext = childContext(key = UUID.randomUUID().toString())
     )
 
     val scannerComponent = ScannerComponent(
-        componentContext = childContext(key = "scannerComponent"),
-        messagingRepository = messagingRepository
+        componentContext = childContext(key = UUID.randomUUID().toString()),
+        messagingRepository = messagingRepository,
+        router = router
     )
 
     private val statusListeners = listOf<ProtectionListener>(
@@ -158,7 +163,8 @@ class AntivirusRootComponent(
     }
 
     data class Args(
-        val componentContext: ComponentContext
+        val componentContext: ComponentContext,
+        val router: Router
     )
 
     companion object {
@@ -171,7 +177,8 @@ class AntivirusRootComponent(
             componentContext = args.componentContext,
             di = di,
             messagingRepository = messagingRepository,
-            defaultDispatcher = defaultDispatcher
+            defaultDispatcher = defaultDispatcher,
+            router = args.router
         )
     }
 }

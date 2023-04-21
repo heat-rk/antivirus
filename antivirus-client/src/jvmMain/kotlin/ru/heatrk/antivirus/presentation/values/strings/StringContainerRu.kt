@@ -6,6 +6,8 @@ object StringContainerRu: StringsContainer {
     override val reload = "Перезагрузить"
     override val ok = "Ок"
 
+    override val back = "Назад"
+
     override val startService = "Запустить сервис"
     override val stopService = "Остановить сервис"
 
@@ -34,6 +36,8 @@ object StringContainerRu: StringsContainer {
     override val virusesNotFound = "Вирусы не обнаружены!"
 
     override val selectFilesToScan = "Выберите файлы для сканирования"
+
+    override val quarantine = "Карантин"
 
     override fun errorMessage(description: String, errorCode: Int?) =
         buildString {

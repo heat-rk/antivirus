@@ -12,12 +12,14 @@ import ru.heatrk.antivirus.domain.models.ScannerEntryStatus
 import ru.heatrk.antivirus.domain.repositories.MessagingRepository
 import ru.heatrk.antivirus.presentation.common.Component
 import ru.heatrk.antivirus.presentation.dialogs.MessageDialogState
+import ru.heatrk.antivirus.presentation.routing.Router
 import ru.heatrk.antivirus.presentation.screens.ProtectionStatus
 import ru.heatrk.antivirus.presentation.screens.ProtectionListener
 import ru.heatrk.antivirus.presentation.values.strings.strings
 
 class ScannerComponent(
     componentContext: ComponentContext,
+    private val router: Router,
     private val messagingRepository: MessagingRepository
 ) : Component(componentContext) {
 
@@ -32,7 +34,7 @@ class ScannerComponent(
 
     fun onIntent(intent: ScannerIntent) {
         when (intent) {
-            is ScannerIntent.More -> Unit
+            is ScannerIntent.More -> router.openScanningMoreInfo()
             is ScannerIntent.Pause -> applyPauseScanIntent(intent)
             is ScannerIntent.Resume -> applyResumeScanIntent(intent)
             is ScannerIntent.Start -> applyStartScanIntent(intent)

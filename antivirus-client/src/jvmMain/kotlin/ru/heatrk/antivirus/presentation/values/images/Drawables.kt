@@ -5,4 +5,5 @@ object Drawables {
     const val ErrorIcon = "error.svg"
     const val VirusScanIcon = "virus_scan.svg"
     const val Ok = "ok.svg"
+    const val Back = "back.svg"
 }
