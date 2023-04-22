@@ -5,10 +5,9 @@
 #include <Windows.h>
 
 using namespace Antivirus;
-using namespace std::chrono;
 
 int64_t Antivirus::timeSinceEpochMillis() {
-	return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 Message Antivirus::generateMessage(
@@ -27,9 +26,7 @@ Message Antivirus::generateMessage(
 
 	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	message.bodySize = byteBuffer.size();
-	message.body = new int8_t[message.bodySize];
-	byteBuffer.getInt8(message.body, byteBuffer.size());
+	byteBuffer.getInt8(&message.body, byteBuffer.size());
 
 	return message;
 }
@@ -48,9 +45,7 @@ Message Antivirus::generateMessage(
 
 	ByteBuffer byteBuffer(0);
 	body->write(&byteBuffer);
-	message.bodySize = byteBuffer.size();
-	message.body = new int8_t[message.bodySize];
-	byteBuffer.getInt8(message.body, byteBuffer.size());
+	byteBuffer.getInt8(&message.body, byteBuffer.size());
 
 	return message;
 }
@@ -81,14 +76,6 @@ bool Antivirus::cmpstrs(char const* const target, char* current, int length) {
 	}
 
 	return true;
-}
-
-void Antivirus::printBytes(int8_t* bytes, int length) {
-	for (int i = 0; i < length; i++) {
-		printf("%d ", bytes[i]);
-	}
-
-	printf("\n");
 }
 
 bool Antivirus::isFileExist(wchar_t* filename) {

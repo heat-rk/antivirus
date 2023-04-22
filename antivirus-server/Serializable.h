@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "ByteBuffer.h"
 
 namespace Antivirus {
@@ -15,6 +17,14 @@ namespace Antivirus {
 
 		template<class T> class Deserializer {
 		public:
+			virtual T createFromBytes(
+				std::vector<int8_t> bytes
+			) const final {
+				ByteBuffer byteBuffer(bytes);
+				T entity = create(&byteBuffer);
+				return entity;
+			}
+
 			virtual T createFromBytes(
 				int8_t* bytes,
 				uint32_t length,

@@ -3,18 +3,22 @@
 #include <iostream>
 
 #include "AppDataProvider.h"
+#include "LogWriter.h"
 
-#define APP_LOCAL_DIRECTORY L"\\antivirus\\"
+#define APP_DIRECTORY_NAME L"\\BVT2001 Antivirus\\"
 
-int Antivirus::appdataDirectory(wchar_t** path) {
-    HRESULT result = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, path);
+std::wstring Antivirus::appdataDirectory() {
+    wchar_t* temp;
+    HRESULT result = SHGetKnownFolderPath(FOLDERID_ProgramData, 0, NULL, &temp);
 
     if (result != S_OK) {
-        printf("Failed to get local appdata path\n");
-        return 1;
+        LogWriter::log("Failed to get local appdata path\n");
+        return std::wstring(L"");
     }
 
-    wcscat_s(*path, MAX_PATH, APP_LOCAL_DIRECTORY);
+    std::wstring path = std::wstring(temp) + APP_DIRECTORY_NAME;
 
-    return 0;
+    CoTaskMemFree(temp);
+
+    return path;
 }

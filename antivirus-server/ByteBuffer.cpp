@@ -15,6 +15,11 @@ ByteBuffer::ByteBuffer(int8_t* arr, uint32_t size) {
 	}
 }
 
+ByteBuffer::ByteBuffer(std::vector<int8_t> arr) {
+	m_buf.resize(arr.size());
+	put(arr);
+}
+
 uint32_t ByteBuffer::bytesRemaining() {
 	return size() - m_rpos;
 }
@@ -34,6 +39,10 @@ uint32_t ByteBuffer::size() {
 }
 
 void ByteBuffer::readedBytes(int8_t** bytes, uint32_t* length) {
+	if (bytes == NULL) {
+		return;
+	}
+
 	int8_t* buffBytes = new int8_t[m_rpos];
 	
 	for (int i = 0; i < m_rpos; i++) {
@@ -42,6 +51,12 @@ void ByteBuffer::readedBytes(int8_t** bytes, uint32_t* length) {
 
 	*bytes = buffBytes;
 	*length = m_rpos;
+}
+
+void ByteBuffer::getInt8(std::vector<int8_t>* dest, uint32_t length) const {
+	for (uint32_t i = 0; i < length; i++) {
+		dest->push_back(getInt8());
+	}
 }
 
 void ByteBuffer::getInt8(int8_t* buffer, uint32_t length) const {
@@ -122,6 +137,11 @@ void ByteBuffer::getWChars(wchar_t* buffer, uint32_t length) const {
 	for (uint32_t i = 0; i < length; i++) {
 		buffer[i] = getWChar();
 	}
+}
+
+void ByteBuffer::put(std::vector<int8_t> bytes) {
+	for (uint32_t i = 0; i < bytes.size(); i++)
+		put(bytes[i]);
 }
 
 void ByteBuffer::put(int8_t* bytes, uint32_t length) {

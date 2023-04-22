@@ -34,9 +34,6 @@
     <Filter Include="Исходные файлы\app">
       <UniqueIdentifier>{19d60940-ecef-48ed-82a4-b8171396263b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Исходные файлы\app\status_notifier">
-      <UniqueIdentifier>{a2106822-0369-4339-80e4-545809429edf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Исходные файлы\app\scanner">
       <UniqueIdentifier>{9d0c7b2a-3d80-4de9-ab24-decb9b601abb}</UniqueIdentifier>
     </Filter>
@@ -62,9 +59,6 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="StatusNotifier.cpp">
-      <Filter>Исходные файлы\app\status_notifier</Filter>
     </ClCompile>
     <ClCompile Include="Scanner.cpp">
       <Filter>Исходные файлы\app\scanner</Filter>
@@ -99,13 +93,16 @@
     <ClCompile Include="LogReader.cpp">
       <Filter>Исходные файлы\core\logger</Filter>
     </ClCompile>
+    <ClCompile Include="ChannelClient.cpp">
+      <Filter>Исходные файлы\core\ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelCore.cpp">
+      <Filter>Исходные файлы\core\ipc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Message.h">
       <Filter>Исходные файлы\app\models</Filter>
-    </ClInclude>
-    <ClInclude Include="StatusNotifier.h">
-      <Filter>Исходные файлы\app\status_notifier</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
       <Filter>Исходные файлы\utils</Filter>
@@ -114,9 +111,6 @@
       <Filter>Исходные файлы\app\scanner</Filter>
     </ClInclude>
     <ClInclude Include="OutgoingMessageBodyError.h">
-      <Filter>Исходные файлы\app\models\outgoing</Filter>
-    </ClInclude>
-    <ClInclude Include="OutgoingMessageBodyStatus.h">
       <Filter>Исходные файлы\app\models\outgoing</Filter>
     </ClInclude>
     <ClInclude Include="Channel.h">
@@ -152,9 +146,6 @@
     <ClInclude Include="VirusFileTypes.h">
       <Filter>Исходные файлы\core\signatures</Filter>
     </ClInclude>
-    <ClInclude Include="OutgoingMessageBodyScan.h">
-      <Filter>Исходные файлы\app\models\outgoing</Filter>
-    </ClInclude>
     <ClInclude Include="AppDataProvider.h">
       <Filter>Исходные файлы\utils</Filter>
     </ClInclude>
@@ -164,9 +155,6 @@
     <ClInclude Include="ScannerCache.h">
       <Filter>Исходные файлы\app\scanner</Filter>
     </ClInclude>
-    <ClInclude Include="OutgoingMessageBodyScanLast.h">
-      <Filter>Исходные файлы\app\models\outgoing</Filter>
-    </ClInclude>
     <ClInclude Include="LogWriter.h">
       <Filter>Исходные файлы\core\logger</Filter>
     </ClInclude>
@@ -175,6 +163,15 @@
     </ClInclude>
     <ClInclude Include="LogConstants.h">
       <Filter>Исходные файлы\core\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="ScannerConstants.h">
+      <Filter>Исходные файлы\app\scanner</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelClient.h">
+      <Filter>Исходные файлы\core\ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelCore.h">
+      <Filter>Исходные файлы\core\ipc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

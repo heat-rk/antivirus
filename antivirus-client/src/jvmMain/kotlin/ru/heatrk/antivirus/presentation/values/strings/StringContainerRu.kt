@@ -27,6 +27,10 @@ object StringContainerRu: StringsContainer {
     override val stop = "Остановить"
     override val resume = "Продолжить"
     override val more = "Подробнее"
+    override val ellipsis = "..."
+    override val virusesNotFound = "Вирусы не обнаружены!"
+
+    override val selectFilesToScan = "Выберите файлы для сканирования"
 
     override fun errorMessage(description: String, errorCode: Int?) =
         buildString {

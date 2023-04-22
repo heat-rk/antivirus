@@ -1,15 +1,15 @@
 package ru.heatrk.antivirus.presentation.dialogs
 
-sealed interface DialogState {
-    object Gone: DialogState
+sealed interface MessageDialogState {
+    object Gone: MessageDialogState
 
     data class Error(
         val title: String,
         val message: String
-    ) : DialogState
+    ) : MessageDialogState
 
     data class Info(
         val title: String,
         val message: String
-    ) : DialogState
+    ) : MessageDialogState
 }

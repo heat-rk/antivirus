@@ -3,17 +3,70 @@
 #include "ByteBuffer.h"
 #include "LogWriter.h"
 
-using namespace std;
 using namespace Antivirus;
 
-#define PIPE_SERVICE_INPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-input"
-#define PIPE_SERVICE_OUTPUT_PATH "\\\\.\\pipe\\antivirus-pipe-service-output"
-#define PIPE_BUFFSIZE 4096
+DWORD WINAPI ChannelClientInputThread(LPVOID lpParam) {
+    Channel::ThreadParams* params = reinterpret_cast<Channel::ThreadParams*>(lpParam);
 
-void Channel::init() {
-    m_inputPipe = CreateNamedPipe(
-        TEXT(PIPE_SERVICE_INPUT_PATH),
-        PIPE_ACCESS_INBOUND,
+    LogWriter::log(L"Channel:%ls: Client input connected.\n", params->wstrType);
+
+    int8_t buffer[PIPE_BUFFSIZE];
+
+    while (ReadFile(params->inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
+        int8_t* readedBytes;
+        uint32_t readedBytesLength;
+
+        Message message = messageDeserializer.createFromBytes(
+            buffer,
+            sizeof(buffer),
+            &readedBytes,
+            &readedBytesLength
+        );
+
+        LogWriter::log(L"Channel:%ls: Message received.\nChannel:%ls: Body -------------------------\n", params->wstrType, params->wstrType);
+        LogWriter::log(L"Channel:%ls: Size of message in bytes: %d\n", params->wstrType, readedBytesLength);
+        LogWriter::log(readedBytes, readedBytesLength);
+        LogWriter::log(L"Channel:%ls: Body end ---------------------\n", params->wstrType);
+
+        delete readedBytes;
+
+        params->onMessage(message);
+    }
+
+    DisconnectNamedPipe(params->inputPipe);
+
+    LogWriter::log(L"Channel:%ls: Client input disconnected.\n", params->wstrType);
+
+    delete params;
+
+    return ERROR_SUCCESS;
+}
+
+void Channel::init(int type) {
+    m_type = type;
+    m_wstrType = wstrOfChannelType(type);
+
+    switch (type) {
+    case CHANNEL_TYPE_EXTERNAL:
+        m_inputPath = PIPE_SERVICE_INPUT_PATH;
+        m_outputPath = PIPE_SERVICE_OUTPUT_PATH;
+        break;
+    case CHANNEL_TYPE_INTERNAL:
+        m_inputPath = PIPE_SERVICE_INPUT_INTERNAL_PATH;
+        m_outputPath = PIPE_SERVICE_OUTPUT_INTERNAL_PATH;
+        break;
+    default:
+        LogWriter::log(L"Channel:%ls: Invalid channel type value = %d\n", m_wstrType, type);
+        return;
+    }
+}
+
+void Channel::handleInputClient(std::function<void(Message)> onMessage) {
+    LogWriter::log(L"Channel:%ls: Waiting for client...\n", m_wstrType);
+
+    HANDLE inputPipe = CreateNamedPipe(
+        m_inputPath,
+        PIPE_ACCESS_DUPLEX,
         PIPE_READMODE_BYTE | PIPE_WAIT,
         PIPE_UNLIMITED_INSTANCES,
         0,
@@ -22,8 +75,40 @@ void Channel::init() {
         NULL
     );
 
-    m_outputPipe = CreateNamedPipe(
-        TEXT(PIPE_SERVICE_OUTPUT_PATH),
+    if (inputPipe == INVALID_HANDLE_VALUE) {
+        LogWriter::log(L"Channel:%ls: pipe creation failed, GLE=%d.\n", m_wstrType, GetLastError());
+        return;
+    }
+
+    if (ConnectNamedPipe(inputPipe, NULL) || GetLastError() == ERROR_PIPE_CONNECTED) {
+        ThreadParams* threadParams = new ThreadParams;
+        threadParams->inputPipe = inputPipe;
+        threadParams->wstrType = m_wstrType;
+        threadParams->onMessage = onMessage;
+
+        HANDLE clientThread = CreateThread(
+            NULL,
+            0,
+            ChannelClientInputThread,
+            threadParams,
+            0,
+            NULL
+        );
+
+        if (clientThread == NULL) {
+            LogWriter::log(L"Channel:%ls: Client input thread creation failed, GLE=%d.\n", m_wstrType, GetLastError());
+            return;
+        }
+
+        CloseHandle(clientThread);
+    } else {
+        LogWriter::log(L"Channel:%ls: Client input connection failed, GLE=%d.\n", m_wstrType, GetLastError());
+    }
+}
+
+void Channel::handleOutputClient() {
+    HANDLE outputPipe = CreateNamedPipe(
+        m_outputPath,
         PIPE_ACCESS_OUTBOUND,
         PIPE_TYPE_BYTE | PIPE_WAIT,
         PIPE_UNLIMITED_INSTANCES,
@@ -33,68 +118,22 @@ void Channel::init() {
         NULL
     );
 
-    if (m_inputPipe == INVALID_HANDLE_VALUE) {
-        LogWriter::log(L"Input pipe creation failed, GLE=%d.\n", GetLastError());
+    if (outputPipe == INVALID_HANDLE_VALUE) {
+        LogWriter::log(L"Channel:%ls: Output pipe creation failed, GLE=%d.\n", m_wstrType, GetLastError());
         return;
     }
 
-    if (m_outputPipe == INVALID_HANDLE_VALUE) {
-        LogWriter::log(L"Output pipe creation failed, GLE=%d.\n", GetLastError());
-        return;
-    }
-}
-
-void Channel::listen(std::function<void(Message)> onMessage) {
-    LogWriter::log(L"Waiting for client...\n");
-
-    if (ConnectNamedPipe(m_inputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-        if (ConnectNamedPipe(m_outputPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)) {
-            LogWriter::log(L"[OUTPUT] Client connected.\n");
-        }
-        else {
-            LogWriter::log(L"[OUTPUT] Client connection failed, GLE=%d.\n", GetLastError());
-        }
-
-        LogWriter::log(L"[INPUT] Client connected.\n");
-
-        int8_t buffer[PIPE_BUFFSIZE];
-
-        while (ReadFile(m_inputPipe, buffer, PIPE_BUFFSIZE, NULL, NULL) != FALSE) {
-            int8_t* readedBytes;
-            uint32_t readedBytesLength;
-
-            Message message = messageDeserializer.createFromBytes(
-                buffer,
-                sizeof(buffer),
-                &readedBytes,
-                &readedBytesLength
-            );
-
-            LogWriter::log(L"[INPUT] Message received.\n[INPUT] Body -------------------------\n");
-            LogWriter::log(L"[INPUT] Size of message in bytes: %d\n", readedBytesLength);
-            LogWriter::log(readedBytes, readedBytesLength);
-            LogWriter::log(L"[INPUT] Body end ---------------------\n");
-
-            delete readedBytes;
-
-            onMessage(message);
-        }
-
-        DisconnectNamedPipe(m_inputPipe);
-        DisconnectNamedPipe(m_outputPipe);
-
-        LogWriter::log(L"[INPUT] Client disconnected.\n");
-        LogWriter::log(L"[OUTPUT] Client disconnected.\n");
-    }
-    else {
-        LogWriter::log(L"[INPUT] Client connection failed, GLE=%d.\n", GetLastError());
+    if (ConnectNamedPipe(outputPipe, NULL) || GetLastError() == ERROR_PIPE_CONNECTED) {
+        m_outputClients.push_back(outputPipe);
+    } else {
+        LogWriter::log(L"Channel:%ls: Client output connection failed, GLE=%d.\n", m_wstrType, GetLastError());
     }
 }
 
 void Channel::write(Message message) {
-    LogWriter::log(L"Writing...\n");
+    LogWriter::log(L"Channel:%ls: Writing...\n", m_wstrType);
 
-    LogWriter::log(L"Body -------------------------\n");
+    LogWriter::log(L"Channel:%ls: Body -------------------------\n", m_wstrType);
 
     ByteBuffer byteBuffer(0);
     message.write(&byteBuffer);
@@ -104,22 +143,32 @@ void Channel::write(Message message) {
 
     LogWriter::log(bytes, byteBuffer.size());
 
-    LogWriter::log(L"Body end ---------------------\n");
+    LogWriter::log(L"Channel:%ls: Body end ---------------------\n", m_wstrType);
 
-    if (m_outputPipe == INVALID_HANDLE_VALUE) {
-        LogWriter::log(L"Write failed because of pipe INVALID_HANDLE_VALUE.\n");
-        return;
+    for (int i = m_outputClients.size() - 1; i >= 0; i--) {
+        HANDLE clientPipe = m_outputClients[i];
+
+        if (clientPipe == INVALID_HANDLE_VALUE) {
+            LogWriter::log(L"Channel:%ls: Write failed because of pipe INVALID_HANDLE_VALUE.\n", m_wstrType);
+            continue;
+        }
+
+        if (WriteFile(clientPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
+            if (GetLastError() == ERROR_BROKEN_PIPE) {
+                DisconnectNamedPipe(clientPipe);
+
+                std::vector<HANDLE>::iterator position =
+                    std::find(m_outputClients.begin(), m_outputClients.end(), clientPipe);
+
+                if (position != m_outputClients.end()) {
+                    m_outputClients.erase(position);
+                }
+            } else {
+                LogWriter::log(L"Channel:%ls: Write failed, GLE=%d.\n", m_wstrType, GetLastError());
+                continue;
+            }
+        }
+
+        LogWriter::log(L"Channel:%ls: Writing succeed.\n", m_wstrType);
     }
-
-    if (WriteFile(m_outputPipe, bytes, PIPE_BUFFSIZE, NULL, NULL) == FALSE) {
-        LogWriter::log(L"Write failed, GLE=%d.\n", GetLastError());
-        return;
-    }
-
-    LogWriter::log(L"Writing succeed.\n");
-}
-
-void Channel::disconnect() {
-    CloseHandle(m_inputPipe);
-    CloseHandle(m_outputPipe);
 }

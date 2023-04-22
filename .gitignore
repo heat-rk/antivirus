@@ -224,7 +224,6 @@ gradle-app.setting
 *.dylib
 
 # Executables
-*.exe
 *.out
 *.app
 *.i*86

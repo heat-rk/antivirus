@@ -6,12 +6,10 @@
 #include <fstream>
 #include <iostream>
 
-using namespace std;
-
 namespace Antivirus {
 	class SignatureBaseFile {
 	protected:
-		fstream m_file;
+		std::fstream m_file;
 		uint32_t m_recordsCount;
 	public:
 		SignatureBaseFile();

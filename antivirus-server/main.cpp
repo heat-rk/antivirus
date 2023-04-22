@@ -4,13 +4,14 @@
 
 #include "Utils.h"
 #include "Channel.h"
-#include "StatusNotifier.h"
 #include "MessageMethod.h"
+#include "MessageStatus.h"
 #include "ServiceManager.h"
 #include "IncomingMessageBodyScan.h"
+#include "LogWriter.h"
+#include "ScannerCache.h"
 
 using namespace Antivirus;
-using namespace std;
 
 wchar_t const* const SERVICE_NAME = TEXT("AntivirusService");
 
@@ -19,14 +20,12 @@ SERVICE_STATUS_HANDLE   g_StatusHandle = NULL;
 HANDLE                  g_ServiceStopEvent = INVALID_HANDLE_VALUE;
 
 Channel                 channel;
-StatusNotifier          statusNotifier;
+Channel                 internalChannel;
 
 void handleClientMessage(Message message) {
-    if (cmpstrs(MessageMethod::E_GET_STATUS, message.method, sizeof(message.method))) {
-        statusNotifier.handleIncomingMessage(message);
-    } else if (cmpstrs(MessageMethod::E_SCAN_START, message.method, sizeof(message.method))) {
+    if (cmpstrs(MessageMethod::E_SCAN_START, message.method, sizeof(message.method))) {
         IncomingMessageBodyScan body =
-            incomingMessageBodyScanDeserializer.createFromBytes(message.body, sizeof(message.body));
+            incomingMessageBodyScanDeserializer.createFromBytes(message.body);
 
         TCHAR commandLine[MAX_PATH];
         GetModuleFileName(NULL, commandLine, MAX_PATH);
@@ -34,7 +33,7 @@ void handleClientMessage(Message message) {
         TCHAR newCommandLine[MAX_PATH];
         wcscpy_s(newCommandLine, commandLine);
         wcscat_s(newCommandLine, L" --scan ");
-        wcscat_s(newCommandLine, body.path);
+        wcscat_s(newCommandLine, body.path.c_str());
 
         STARTUPINFO si = { sizeof(si) };
         PROCESS_INFORMATION pi;
@@ -43,68 +42,120 @@ void handleClientMessage(Message message) {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         }
-    } else if (cmpstrs(MessageMethod::E_SCAN_LAST, message.method, sizeof(message.method))) {
-        
     }
 }
 
 void init() {
-    channel.init();
-    statusNotifier.setOutgoingMessagesHandler([](Message message) { channel.write(message); });
+    ScannerCache scannerCache;
+    scannerCache.validate();
+
+    channel.init(CHANNEL_TYPE_EXTERNAL);
+    internalChannel.init(CHANNEL_TYPE_INTERNAL);
 }
 
-void destroy() {
-    channel.disconnect();
+void handleServiceStop() {
+    Message stopMessage = generateMessage(
+        (char*) MessageMethod::E_SCAN_STOP,
+        MessageStatus::E_REQUEST
+    );
+
+    internalChannel.write(stopMessage);
+
+    if (g_ServiceStatus.dwCurrentState == SERVICE_STOPPED ||
+        g_ServiceStatus.dwCurrentState == SERVICE_STOP_PENDING) {
+        return;
+    }
+
+    g_ServiceStatus.dwControlsAccepted = 0;
+    g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+    g_ServiceStatus.dwWin32ExitCode = 0;
+    g_ServiceStatus.dwCheckPoint = 4;
+
+    if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
+        LogWriter::log(L"AntivirusService: ServiceCtrlHandler: SetServiceStatus returned error\n");
+    }
+
+    SetEvent(g_ServiceStopEvent);
 }
 
 VOID WINAPI ServiceCtrlHandler(DWORD dwControl) {
-    
     switch (dwControl) {
     case SERVICE_CONTROL_STOP:
-        if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING) {
-            break;
-        }
-
-        g_ServiceStatus.dwControlsAccepted = 0;
-        g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-        g_ServiceStatus.dwWin32ExitCode = 0;
-        g_ServiceStatus.dwCheckPoint = 4;
-
-        if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-            OutputDebugString(TEXT("AntivirusService: ServiceCtrlHandler: SetServiceStatus returned error"));
-        }
-
-        SetEvent(g_ServiceStopEvent);
-
+        handleServiceStop();
         break;
     case SERVICE_CONTROL_SHUTDOWN:
-        if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING) {
-            break;
-        }
-
-        g_ServiceStatus.dwControlsAccepted = 0;
-        g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-        g_ServiceStatus.dwWin32ExitCode = 0;
-        g_ServiceStatus.dwCheckPoint = 4;
-
-        if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-            OutputDebugString(TEXT("AntivirusService: ServiceCtrlHandler: SetServiceStatus returned error"));
-        }
-
-        SetEvent(g_ServiceStopEvent);
-
+        handleServiceStop();
         break;
     default:
         break;
     }
 }
 
-DWORD WINAPI ServiceWorkerThread(LPVOID lpParam) {
-    while (WaitForSingleObject(g_ServiceStopEvent, 0) != WAIT_OBJECT_0) {
-        channel.listen([](Message message) { handleClientMessage(message); });
+DWORD WINAPI ExternalChannelInputThread(LPVOID lpParam) {
+    for (;;) {
+        channel.handleInputClient([](Message message) { 
+            handleClientMessage(message);
+            internalChannel.write(message);
+        });
     }
 
     return ERROR_SUCCESS;
+}
+
+DWORD WINAPI ExternalChannelOutputThread(LPVOID lpParam) {
+    for (;;) {
+        channel.handleOutputClient();
+    }
+
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI InternalChannelInputThread(LPVOID lpParam) {
+    for (;;) {
+        internalChannel.handleInputClient([](Message message) {
+            channel.write(message);
+        });
+    }
+
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI InternalChannelOutputThread(LPVOID lpParam) {
+    for (;;) {
+        internalChannel.handleOutputClient();
+    }
+
+    return ERROR_SUCCESS;
+}
+
+void startServiceThreads() {
+    HANDLE internalInputThread = CreateThread(NULL, 0, InternalChannelInputThread, NULL, 0, NULL);
+
+    if (internalInputThread == NULL) {
+        LogWriter::log(L"AntivirusService: ServiceMain: Internal input thread creation failed, GLE=%d\n", GetLastError());
+    }
+
+    HANDLE internalOutputThread = CreateThread(NULL, 0, InternalChannelOutputThread, NULL, 0, NULL);
+
+    if (internalOutputThread == NULL) {
+        LogWriter::log(L"AntivirusService: ServiceMain: Internal output thread creation failed, GLE=%d\n", GetLastError());
+    }
+
+    HANDLE externalInputThread = CreateThread(NULL, 0, ExternalChannelInputThread, NULL, 0, NULL);
+
+    if (externalInputThread == NULL) {
+        LogWriter::log(L"AntivirusService: ServiceMain: External input thread creation failed, GLE=%d\n", GetLastError());
+    }
+
+    HANDLE externalOutputThread = CreateThread(NULL, 0, ExternalChannelOutputThread, NULL, 0, NULL);
+
+    if (externalOutputThread == NULL) {
+        LogWriter::log(L"AntivirusService: ServiceMain: External output thread creation failed, GLE=%d\n", GetLastError());
+    }
+
+    if (WaitForSingleObject(g_ServiceStopEvent, INFINITE) == WAIT_FAILED) {
+        LogWriter::log(L"AntivirusService: ServiceMain: Waiting for threads failed, GLE=%d\n", GetLastError());
+    }
 }
 
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
@@ -126,7 +177,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
     g_ServiceStatus.dwCheckPoint = 0;
 
     if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-        OutputDebugString(TEXT("AntivirusService: ServiceMain: SetServiceStatus returned error"));
+        LogWriter::log(L"AntivirusService: ServiceMain: SetServiceStatus returned error\n");
     }
 
     init();
@@ -140,7 +191,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
         g_ServiceStatus.dwCheckPoint = 1;
 
         if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-            OutputDebugString(TEXT("My Sample Service: ServiceMain: SetServiceStatus returned error"));
+            LogWriter::log(L"AntivirusService: ServiceMain: SetServiceStatus returned error\n");
         }
 
         return;
@@ -152,12 +203,10 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
     g_ServiceStatus.dwCheckPoint = 0;
 
     if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-        OutputDebugString(TEXT("AntivirusService: ServiceMain: SetServiceStatus returned error"));
+        LogWriter::log(L"AntivirusService: ServiceMain: SetServiceStatus returned error\n");
     }
 
-    HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
-    WaitForSingleObject(hThread, INFINITE);
-    destroy();
+    startServiceThreads();
 
     CloseHandle(g_ServiceStopEvent);
 
@@ -167,7 +216,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
     g_ServiceStatus.dwCheckPoint = 3;
 
     if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
-        OutputDebugString(TEXT("AntivirusService: ServiceMain: SetServiceStatus returned error"));
+        LogWriter::log(L"AntivirusService: ServiceMain: SetServiceStatus returned error\n");
     }
 }
 
@@ -179,11 +228,9 @@ int wmain(int argc, wchar_t* argv[]) {
         };
 
         if (StartServiceCtrlDispatcher(ServiceTable) == FALSE) {
-            printf("Service constructor failed with code %d.\n", GetLastError());
+            LogWriter::log("Service constructor failed with code %d.\n", GetLastError());
             init();
-            HANDLE hThread = CreateThread(NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
-            WaitForSingleObject(hThread, INFINITE);
-            destroy();
+            startServiceThreads();
         }
     } else {
         ServiceManager sm(argv[0]);

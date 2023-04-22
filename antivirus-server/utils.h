@@ -29,8 +29,6 @@ namespace Antivirus {
 
 	bool cmpstrs(char const* const target, char* current, int length);
 
-	void printBytes(int8_t* bytes, int length);
-
 	bool isFileExist(wchar_t* filename);
 
 	int8_t toInt8(std::string str);

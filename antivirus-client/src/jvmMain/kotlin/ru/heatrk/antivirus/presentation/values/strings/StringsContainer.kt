@@ -32,6 +32,10 @@ interface StringsContainer {
     val stop: String
     val resume: String
     val more: String
+    val ellipsis: String
+    val virusesNotFound: String
+
+    val selectFilesToScan: String
 
     fun errorMessage(description: String, errorCode: Int?): String
     fun scanOf(path: String): String

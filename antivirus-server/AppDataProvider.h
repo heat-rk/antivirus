@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace Antivirus {
-	int appdataDirectory(wchar_t** path);
+	std::wstring appdataDirectory();
 }

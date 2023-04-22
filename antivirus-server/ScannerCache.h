@@ -1,16 +1,49 @@
 #pragma once
-
+#include <cstdint>
 #include <vector>
-#include <Windows.h>
-#include <stdio.h>
+#include <string>
+#include <fstream>
 #include <filesystem>
-
-using namespace std;
+#include <Windows.h>
 
 namespace Antivirus {
 	class ScannerCache {
 	public:
-		void save(vector<wstring> viruses);
-		void load(vector<wstring>* dest);
+		struct DelayedSavingItem {
+			std::vector<std::wstring> all;
+			std::vector<int8_t> statuses;
+			int8_t scannerStatus;
+		};
+
+		struct SavingThreadParams {
+			int64_t* lastSaveRequestMillis;
+			std::vector<DelayedSavingItem>* saveRequests;
+			std::wstring scannerDataFilePath;
+			bool* saverEnabled;
+		};
+	private:
+		HANDLE m_savingThread;
+		SavingThreadParams* m_savingThreadParams;
+		std::vector<DelayedSavingItem> m_saveRequests;
+		int64_t m_lastSaveRequestMillis;
+		std::wstring m_scannerDataFilePath;
+		bool m_saverEnabled;
+	public:
+		ScannerCache(bool saverEnabled = false);
+		~ScannerCache();
+
+		void save(
+			std::vector<std::wstring> all,
+			std::vector<int8_t> statuses,
+			int8_t scannerStatus
+		);
+
+		bool load(
+			std::vector<std::wstring>* all,
+			std::vector<int8_t>* statuses,
+			int8_t* scannerStatus
+		);
+
+		void validate();
 	};
 }
